@@ -28,39 +28,16 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-//            val viewModel: GameSelectionViewModel = viewModel()
             BoardGamesGaloreTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize()
                 ) {
                     GameNavHost()
-//                    val gameViewModel: GameSelectionViewModel = hiltViewModel()
-//                    val gameUiState by gameViewModel.gameUiState.collectAsState()
-//                    GameList(gameList = gameUiState.games)
                 }
             }
-
-//            BoardGamesGaloreTheme {
-//                BoardGameGaloreScreen(modifier = Modifier.fillMaxSize())
-//                val gameNavController = rememberNavController()
-//            val games by viewModel.allGames.collectAsState()
-//            games.value?.let { localGames ->
-//                StartComposable(games = localGames)
-//            }
-
-                // A surface container using the 'background' color from the theme
-//                Scaffold{ innerPadding ->
-                    
-////                    GameNavHost(
-////                        navController = gameNavController,
-////                        modifier = Modifier.padding(innerPadding)
-////                    )
-//                }
-//            }
         }
     }
 }
@@ -89,66 +66,3 @@ fun GameListItem(game: Game, modifier: Modifier) {
         }
     }
 }
-
-//@Composable
-//fun StartComposable(games: List<Game>) {
-//    BoardGamesGaloreTheme {
-//        LazyColumn(modifier = Modifier.fillMaxSize()){
-//           items(items = games) {
-//               Text(
-//                   text = it.name
-//               )
-//           }
-//        }
-//    }
-//}
-
-//@Composable
-//fun BoardGameGaloreScreen(
-//    modifier: Modifier,
-//    gameSelectionViewModel: GameSelectionViewModel = viewModel()) {
-//    val list = gameSelectionViewModel.allGames.observeAsState().value
-//    list?.let { localList ->
-//        LazyColumn(modifier = modifier) {
-//            items(
-//                items = localList
-//            ){
-//                Card(
-//                    colors = CardDefaults.cardColors(
-//                        containerColor = MaterialTheme.colorScheme.primary
-//                    ),
-//                    modifier = modifier
-//                ) {
-//                    Row(
-//                        modifier = modifier
-//                    ) {
-//                        Text(it.name)
-//                    }
-//                }
-//            }
-//        }
-//    } ?: run {
-//        Row(
-//            modifier = modifier
-//        ) {
-//            Text("Empty LIst")
-//        }
-//    }
-//
-//}
-
-//@Composable
-//fun Greeting(name: String, modifier: Modifier = Modifier) {
-//    Text(
-//        text = "Hello $name!",
-//        modifier = modifier
-//    )
-//}
-
-//@Preview(showBackground = true)
-//@Composable
-//fun GreetingPreview() {
-//    BoardGamesGaloreTheme {
-//        Greeting("Android")
-//    }
-//}

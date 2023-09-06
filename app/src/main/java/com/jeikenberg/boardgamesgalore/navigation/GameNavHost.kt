@@ -1,9 +1,10 @@
+@file:Suppress("UNUSED_VARIABLE")
+
 package com.jeikenberg.boardgamesgalore.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -11,12 +12,10 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.jeikenberg.boardgamesgalore.data.game.Game
 import com.jeikenberg.boardgamesgalore.ui.gamedetails.GameInfoScreen
 import com.jeikenberg.boardgamesgalore.ui.gameselection.GameSelectionScreen
 import com.jeikenberg.boardgamesgalore.ui.utilscreens.AddGameScreen
 import com.jeikenberg.boardgamesgalore.viewmodels.GameSelectionViewModel
-import kotlinx.coroutines.launch
 
 @Composable
 fun GameNavHost(
@@ -30,15 +29,20 @@ fun GameNavHost(
     ) {
         composable(route = GameList.route) {
             val viewModel: GameSelectionViewModel = hiltViewModel()
+
+            // Need this to pull data from database to initialize the database.
+            val gameUiState by viewModel.gameUiState.collectAsState()
+
             val searchedGames by viewModel.searchedGames.collectAsState()
             val searchText by viewModel.searchText.collectAsState()
             val isSearching by viewModel.isSearching.collectAsState()
             GameSelectionScreen(
-                searchText =  searchText,
+                searchText = searchText,
                 gameList = searchedGames,
                 isSearching = isSearching,
                 onValueChange = viewModel::onSearchTextChange,
-                modifier = modifier)
+                modifier = modifier
+            )
         }
         composable(route = AddGame.route) {
             AddGameScreen(modifier = modifier)
