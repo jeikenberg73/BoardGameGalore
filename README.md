@@ -1,0 +1,2 @@
+# BoardGamesGalore
+Board game database.
