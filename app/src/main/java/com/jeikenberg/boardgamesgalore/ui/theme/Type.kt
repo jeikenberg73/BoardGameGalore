@@ -143,8 +143,6 @@ val InterFontFamily = FontFamily(
     )
 )
 
-
-
 val GameTypography = Typography(
     displayLarge = TextStyle(
         fontFamily = AlmendraFontFamily,

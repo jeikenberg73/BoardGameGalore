@@ -18,14 +18,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.IconButton
 import androidx.compose.material.Text
-import androidx.compose.material.TextField
-import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -53,11 +48,8 @@ import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.jeikenberg.boardgamesgalore.R
 import com.jeikenberg.boardgamesgalore.data.game.Game
-import com.jeikenberg.boardgamesgalore.ui.theme.BlueGradiantBackgroundStart
-import com.jeikenberg.boardgamesgalore.ui.theme.BlueGradiantBackgroundStop
 import com.jeikenberg.boardgamesgalore.ui.theme.GreenGradiantBackgroundStart
 import com.jeikenberg.boardgamesgalore.ui.theme.GreenGradiantBackgroundStop
-import com.jeikenberg.boardgamesgalore.ui.theme.secondary
 import com.jeikenberg.boardgamesgalore.util.Log
 import java.io.InputStream
 
@@ -68,19 +60,20 @@ fun GameSelectionScreen(
     gameList: List<Game>,
     isSearching: Boolean = false,
     onValueChange: (String) -> Unit,
+    onAddGameClicked: () -> Unit,
     modifier: Modifier
 ) {
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-//                    onAddGameClicked
+                    onAddGameClicked
                 },
                 elevation = FloatingActionButtonDefaults.elevation(
                     defaultElevation = 5.dp
                 ),
                 shape = CircleShape,
-                containerColor = secondary,
+                containerColor = MaterialTheme.colorScheme.secondary,
                 modifier = Modifier
             ) {
                 Icon(
@@ -111,43 +104,10 @@ fun GameSelectionScreen(
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
-                val colorStops = arrayOf(
-                    0.0f to BlueGradiantBackgroundStart,
-                    1.0f to BlueGradiantBackgroundStop
-                )
-                TextField(
-                    value = searchText,
+                GameSearchBar(
+                    searchText = searchText,
                     onValueChange = onValueChange,
-                    colors = TextFieldDefaults.textFieldColors(
-                        textColor = Color.White
-                    ),
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            tint = Color.White,
-                            contentDescription = null,
-                            modifier = modifier
-                        )
-                    },
-                    trailingIcon = {
-                        IconButton(
-                            onClick = { /*TODO*/ }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                tint = Color.White,
-                                contentDescription = null
-                            )
-                        }
-                    },
                     modifier = modifier
-                        .fillMaxWidth()
-                        .background(Brush.verticalGradient(colorStops = colorStops)),
-                    placeholder = {
-                        Text(
-                            text = "Search"
-                        )
-                    }
                 )
                 Spacer(modifier = modifier.height(16.dp))
                 if (isSearching) {
@@ -353,6 +313,7 @@ fun GameSearchEmptyPreview() {
         searchText = "",
         gameList = listOf(),
         onValueChange = {},
+        onAddGameClicked = {},
         modifier = Modifier
     )
 }
@@ -365,6 +326,7 @@ fun GameSelectionScreenAllGamesPreview() {
         searchText = "",
         gameList = games,
         onValueChange = {},
+        onAddGameClicked = {},
         modifier = Modifier
     )
 }

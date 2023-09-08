@@ -41,6 +41,9 @@ fun GameNavHost(
                 gameList = searchedGames,
                 isSearching = isSearching,
                 onValueChange = viewModel::onSearchTextChange,
+                onAddGameClicked = {
+                  navController.navigateSingleTopTo(AddGame.route)
+                },
                 modifier = modifier
             )
         }
