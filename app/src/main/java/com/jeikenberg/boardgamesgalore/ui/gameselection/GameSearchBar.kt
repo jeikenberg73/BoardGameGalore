@@ -1,6 +1,8 @@
 package com.jeikenberg.boardgamesgalore.ui.gameselection
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.IconButton
 import androidx.compose.material.Text
@@ -14,8 +16,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import com.jeikenberg.boardgamesgalore.ui.theme.BlueGradiantBackgroundStart
 import com.jeikenberg.boardgamesgalore.ui.theme.BlueGradiantBackgroundStop
+import com.jeikenberg.boardgamesgalore.ui.theme.BoardGamesGaloreTheme
 
 @Composable
 fun GameSearchBar(
@@ -31,7 +35,10 @@ fun GameSearchBar(
         value = searchText,
         onValueChange = onValueChange,
         colors = TextFieldDefaults.textFieldColors(
-            textColor = Color.White
+            textColor = Color.White,
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            disabledIndicatorColor = Color.Transparent
         ),
         leadingIcon = {
             Icon(
@@ -61,4 +68,19 @@ fun GameSearchBar(
             )
         }
     )
+}
+
+@Preview(
+    uiMode = Configuration.UI_MODE_NIGHT_NO,
+    showBackground = true
+)
+@Composable
+fun GameSearchBarPreview() {
+    BoardGamesGaloreTheme {
+        GameSearchBar(
+            searchText = "Search",
+            onValueChange = {},
+            modifier = Modifier
+        )
+    }
 }

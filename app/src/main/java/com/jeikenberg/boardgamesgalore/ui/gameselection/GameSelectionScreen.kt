@@ -1,6 +1,7 @@
 package com.jeikenberg.boardgamesgalore.ui.gameselection
 
 import android.content.Context
+import android.content.res.Configuration
 import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -48,6 +49,7 @@ import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.jeikenberg.boardgamesgalore.R
 import com.jeikenberg.boardgamesgalore.data.game.Game
+import com.jeikenberg.boardgamesgalore.ui.theme.BoardGamesGaloreTheme
 import com.jeikenberg.boardgamesgalore.ui.theme.GreenGradiantBackgroundStart
 import com.jeikenberg.boardgamesgalore.ui.theme.GreenGradiantBackgroundStop
 import com.jeikenberg.boardgamesgalore.util.Log
@@ -64,16 +66,24 @@ fun GameSelectionScreen(
     modifier: Modifier
 ) {
     Scaffold(
+        topBar = {
+            val isVisible = gameList.isNotEmpty()
+            TopBar(
+                searchText = searchText,
+                onValueChange = onValueChange,
+                isVisible = isVisible,
+                modifier = modifier
+            )
+        },
+        containerColor = MaterialTheme.colorScheme.primary,
         floatingActionButton = {
             FloatingActionButton(
-                onClick = {
-                    onAddGameClicked
-                },
+                onClick = onAddGameClicked,
                 elevation = FloatingActionButtonDefaults.elevation(
                     defaultElevation = 5.dp
                 ),
                 shape = CircleShape,
-                containerColor = MaterialTheme.colorScheme.secondary,
+                containerColor = MaterialTheme.colorScheme.onPrimaryContainer,
                 modifier = Modifier
             ) {
                 Icon(
@@ -89,7 +99,9 @@ fun GameSelectionScreen(
             Column(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = modifier.fillMaxSize()
+                modifier = modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.primary)
             ) {
                 Text(
                     text = "No Games In Database. \nPlease add a game.",
@@ -102,16 +114,14 @@ fun GameSelectionScreen(
             Column(
                 modifier = modifier
                     .fillMaxSize()
-                    .padding(innerPadding)
+                    .background(MaterialTheme.colorScheme.primary)
             ) {
-                GameSearchBar(
-                    searchText = searchText,
-                    onValueChange = onValueChange,
-                    modifier = modifier
-                )
-                Spacer(modifier = modifier.height(16.dp))
                 if (isSearching) {
-                    Box(modifier = modifier.fillMaxSize()) {
+                    Box(
+                        modifier = modifier
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.primary)
+                    ) {
                         CircularProgressIndicator(
                             modifier = modifier.align(Alignment.Center)
                         )
@@ -120,6 +130,7 @@ fun GameSelectionScreen(
                     LazyColumn(
                         modifier = modifier
                             .padding(innerPadding)
+                            .background(MaterialTheme.colorScheme.primary)
                     ) {
                         items(items = gameList, key = { it.gameId }) { game ->
                             GameSearchItem(onGameClicked = {}, game = game, modifier = modifier)
@@ -128,6 +139,22 @@ fun GameSelectionScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun TopBar(
+    searchText: String,
+    onValueChange: (String) -> Unit,
+    isVisible: Boolean = false,
+    modifier: Modifier
+) {
+    if(isVisible) {
+        GameSearchBar(
+            searchText = searchText,
+            onValueChange = onValueChange,
+            modifier = modifier
+        )
     }
 }
 
@@ -306,29 +333,39 @@ fun getFakeGameList(): List<Game> {
     return games
 }
 
-@Preview(showBackground = true)
+@Preview(
+    uiMode = Configuration.UI_MODE_NIGHT_NO,
+    showBackground = true
+)
 @Composable
 fun GameSearchEmptyPreview() {
-    GameSelectionScreen(
-        searchText = "",
-        gameList = listOf(),
-        onValueChange = {},
-        onAddGameClicked = {},
-        modifier = Modifier
-    )
+    BoardGamesGaloreTheme {
+        GameSelectionScreen(
+            searchText = "",
+            gameList = listOf(),
+            onValueChange = {},
+            onAddGameClicked = {},
+            modifier = Modifier
+        )
+    }
 }
 
-@Preview(showBackground = true)
+@Preview(
+    uiMode = Configuration.UI_MODE_NIGHT_NO,
+    showBackground = true
+)
 @Composable
 fun GameSelectionScreenAllGamesPreview() {
-    val games = getFakeGameList()
-    GameSelectionScreen(
-        searchText = "",
-        gameList = games,
-        onValueChange = {},
-        onAddGameClicked = {},
-        modifier = Modifier
-    )
+    BoardGamesGaloreTheme {
+        val games = getFakeGameList()
+        GameSelectionScreen(
+            searchText = "",
+            gameList = games,
+            onValueChange = {},
+            onAddGameClicked = {},
+            modifier = Modifier
+        )
+    }
 }
 
 @Preview(showBackground = true, widthDp = 320, heightDp = 80)

@@ -1,5 +1,7 @@
 package com.jeikenberg.boardgamesgalore.ui.utilscreens
 
+import android.net.Uri
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -35,15 +37,22 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.annotation.ExperimentalCoilApi
+import coil.compose.rememberImagePainter
 import com.jeikenberg.boardgamesgalore.ui.theme.BlueGradiantBackgroundStart
 import com.jeikenberg.boardgamesgalore.ui.theme.BlueGradiantBackgroundStop
 import com.jeikenberg.boardgamesgalore.ui.theme.BoardGamesGaloreTheme
 import com.jeikenberg.boardgamesgalore.ui.theme.GreenColorStops
 import com.jeikenberg.boardgamesgalore.ui.theme.InterFontFamily
 
+
+@ExperimentalCoilApi
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddGameScreen(
+    takePictureClick: () -> Unit,
+    uploadPictureClick: () -> Unit,
+    imageUri: Uri? = null,
     modifier: Modifier
 ) {
     var gameName: String by rememberSaveable {
@@ -73,7 +82,7 @@ fun AddGameScreen(
                 modifier = modifier
             )
         },
-        containerColor = MaterialTheme.colorScheme.secondary,
+        containerColor = MaterialTheme.colorScheme.primary,
         modifier = modifier
     ) { innerPadding ->
         Column(
@@ -149,6 +158,8 @@ fun AddGameScreen(
                 value = gameDescription,
                 onValueChange = { gameDescription = it },
                 label = "Game Description",
+                singleLine = false,
+                maxLines = 4,
                 modifier = modifier
                     .padding(top = 8.dp)
                     .padding(start = 8.dp)
@@ -168,7 +179,7 @@ fun AddGameScreen(
                     .align(Alignment.CenterHorizontally)
             ) {
                 Button(
-                    onClick = { /*TODO*/ },
+                    onClick = uploadPictureClick,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Transparent
                     ),
@@ -185,7 +196,7 @@ fun AddGameScreen(
                 }
                 Spacer(modifier = modifier.width(16.dp))
                 Button(
-                    onClick = { /*TODO*/ },
+                    onClick = takePictureClick,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Transparent
                     ),
@@ -200,6 +211,15 @@ fun AddGameScreen(
                         style = MaterialTheme.typography.bodyLarge
                     )
                 }
+            }
+            if(imageUri != null) {
+                Image(
+                    painter = rememberImagePainter(imageUri),
+                    contentDescription = "Captured image",
+                    modifier = modifier
+                        .padding(top = 16.dp)
+                        .align(Alignment.CenterHorizontally)
+                )
             }
         }
     }
@@ -255,6 +275,8 @@ fun GameTextField(
     value: String,
     onValueChange: (String) -> Unit,
     label: String,
+    singleLine: Boolean = true,
+    maxLines: Int = 1,
     modifier: Modifier
 ) {
     TextField(
@@ -271,7 +293,8 @@ fun GameTextField(
             focusedIndicatorColor = Color.Transparent,
             unfocusedIndicatorColor = Color.Transparent
         ),
-        singleLine = false,
+        singleLine = singleLine,
+        maxLines = maxLines,
         value = value,
         onValueChange = onValueChange,
         placeholder = {
@@ -332,6 +355,10 @@ fun GameTextFieldHasTextPreview() {
 @Composable
 fun AddGameScreenPreview() {
     BoardGamesGaloreTheme {
-        AddGameScreen(modifier = Modifier)
+        AddGameScreen(
+            takePictureClick = {},
+            uploadPictureClick = {},
+            modifier = Modifier
+        )
     }
 }

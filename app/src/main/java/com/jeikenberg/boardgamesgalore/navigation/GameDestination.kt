@@ -53,6 +53,10 @@ object AddGame: GameDestination {
     override val route = "addGame"
 }
 
+object TakePicture: GameDestination {
+    override val route = "takePicture"
+}
+
 object AddImage: GameDestination {
     override val route = "addImage"
 }
