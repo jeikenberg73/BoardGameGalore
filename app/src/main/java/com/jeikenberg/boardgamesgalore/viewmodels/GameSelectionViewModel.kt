@@ -1,9 +1,14 @@
 package com.jeikenberg.boardgamesgalore.viewmodels
 
+import android.content.ContentResolver
+import android.graphics.Bitmap
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jeikenberg.boardgamesgalore.data.ImagePersistenceRepository
 import com.jeikenberg.boardgamesgalore.data.game.Game
 import com.jeikenberg.boardgamesgalore.data.game.GameRepository
+import com.jeikenberg.boardgamesgalore.util.MediaStoreImage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.FlowPreview
@@ -23,7 +28,8 @@ import javax.inject.Inject
 @HiltViewModel
 @OptIn(FlowPreview::class)
 class GameSelectionViewModel @Inject constructor(
-    private val gameRepository: GameRepository
+    private val gameRepository: GameRepository,
+    private val imagePersistenceRepository: ImagePersistenceRepository
 ) : ViewModel() {
 
     companion object {
@@ -75,6 +81,14 @@ class GameSelectionViewModel @Inject constructor(
         CoroutineScope(viewModelScope.coroutineContext).launch {
             gameRepository.insertGame(game)
         }
+    }
+
+    fun saveImage(contentResolver: ContentResolver, fileName: String, bitmap: Bitmap): Uri {
+        return imagePersistenceRepository.saveImage(contentResolver, fileName, bitmap)
+    }
+
+    fun getImage(contentResolver: ContentResolver, game: Game): MediaStoreImage? {
+       return imagePersistenceRepository.retrieveImage(contentResolver, game)
     }
 }
 

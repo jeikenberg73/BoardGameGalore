@@ -45,6 +45,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.jeikenberg.boardgamesgalore.R
@@ -53,6 +55,9 @@ import com.jeikenberg.boardgamesgalore.ui.theme.BoardGamesGaloreTheme
 import com.jeikenberg.boardgamesgalore.ui.theme.GreenGradiantBackgroundStart
 import com.jeikenberg.boardgamesgalore.ui.theme.GreenGradiantBackgroundStop
 import com.jeikenberg.boardgamesgalore.util.Log
+import com.jeikenberg.boardgamesgalore.util.checkUri
+import com.jeikenberg.boardgamesgalore.viewmodels.GameSelectionViewModel
+import java.io.File
 import java.io.InputStream
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -188,9 +193,20 @@ fun GameSearchItem(
                     }
             ) {
                 // Use GlideImage when ready to view on phone
-                if (checkUri(LocalContext.current, game.gameIconUri)) {
+//                val uri = Uri.parse(game.gameIconUri)
+//                LocalContext.current.contentResolver.openFileDescriptor(uri, "r").use { fileDescriptor ->
+//                    if (fileDescriptor == null) {
+//                        throw NullPointerException("ParcelFileDescriptor from $uri was null")
+//                    }
+//                    val path = "/proc/${android.os.Process.myPid()}/fd/${fileDescriptor.fd}"
+//                    val fileUri = Uri.fromFile(File(path).canonicalFile)
+//                }
+                val viewModel:GameSelectionViewModel = hiltViewModel()
+                val contentResolver = LocalContext.current.contentResolver
+                val gameMediaStoreImage = viewModel.getImage(contentResolver, game)
+                if (checkUri(LocalContext.current, gameMediaStoreImage?.contentUri.toString())) {
                     GlideImage(
-                        model = Uri.parse(game.gameIconUri),
+                        model = Uri.parse(gameMediaStoreImage?.contentUri.toString()),
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
@@ -232,24 +248,8 @@ fun GameSearchItem(
     }
 }
 
-private fun checkUri(context: Context, uri: String): Boolean {
-    var inputStr: InputStream? = null
-    try {
-        inputStr = context.contentResolver.openInputStream(Uri.parse(uri))
-    } catch (e: Exception) {
-        Log.d("TAG", "Exception $e")
-    }
-
-    val exists = inputStr != null
-
-    inputStr?.close()
-
-    return exists
-}
-
 fun getFakeGame(): Game {
     return Game(
-        0L,
         "GloomHaven",
         "GloomTeam",
         8.6,
@@ -265,7 +265,6 @@ fun getFakeGameList(): List<Game> {
     val games = ArrayList<Game>()
 
     val game1 = Game(
-        0L,
         "GloomHaven",
         "GloomTeam",
         8.6,
@@ -277,7 +276,6 @@ fun getFakeGameList(): List<Game> {
     )
 
     val game2 = Game(
-        1L,
         "Terraforming Mars",
         "FryxGames",
         8.4,
@@ -289,7 +287,6 @@ fun getFakeGameList(): List<Game> {
     )
 
     val game3 = Game(
-        2L,
         "Dominion",
         "Rio Grande Games",
         7.6,
@@ -301,7 +298,6 @@ fun getFakeGameList(): List<Game> {
     )
 
     val game4 = Game(
-        3L,
         "Catan",
         "KOSMOS",
         7.1,
@@ -313,7 +309,6 @@ fun getFakeGameList(): List<Game> {
     )
 
     val game5 = Game(
-        4L,
         "Beyond the Sun",
         "Rio Grande Games",
         8.0,

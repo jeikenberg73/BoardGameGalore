@@ -39,7 +39,7 @@ private fun Rational(
     AlertDialog(
         onDismissRequest = { /* Don't */ },
         title = {
-            Text(text = "Permiddion request")
+            Text(text = "Permission request")
         },
         text = {
             Text(text)

@@ -2,6 +2,7 @@ package com.jeikenberg.boardgamesgalore.di
 
 import android.content.Context
 import com.jeikenberg.boardgamesgalore.data.GameDatabase
+import com.jeikenberg.boardgamesgalore.data.ImagePersistenceRepository
 import com.jeikenberg.boardgamesgalore.data.game.GameDao
 import com.jeikenberg.boardgamesgalore.data.game.GameRepository
 import dagger.Module
@@ -31,6 +32,12 @@ object GameAppModules {
     @Singleton
     fun provideGameRepository(gameDao: GameDao): GameRepository {
         return GameRepository.getInstance(gameDao)
+    }
+
+    @Provides
+    @Singleton
+    fun provideImageSaveRepository(): ImagePersistenceRepository {
+        return ImagePersistenceRepository.getInstance()
     }
 
 //    @Provides

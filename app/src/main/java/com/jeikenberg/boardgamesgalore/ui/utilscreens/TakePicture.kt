@@ -2,6 +2,7 @@ package com.jeikenberg.boardgamesgalore.ui.utilscreens
 
 import android.Manifest
 import android.content.Intent
+import android.graphics.Bitmap
 import android.net.Uri
 import android.provider.Settings
 import android.view.ViewGroup
@@ -28,6 +29,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
@@ -40,28 +42,35 @@ import com.jeikenberg.boardgamesgalore.util.Permission
 import com.jeikenberg.boardgamesgalore.util.executor
 import com.jeikenberg.boardgamesgalore.util.getCameraProvider
 import com.jeikenberg.boardgamesgalore.util.takePicture
+import com.mr0xf00.easycrop.CropError
+import com.mr0xf00.easycrop.CropResult
+import com.mr0xf00.easycrop.ImageCropper
+import com.mr0xf00.easycrop.crop
+import com.mr0xf00.easycrop.rememberImageCropper
+import com.mr0xf00.easycrop.ui.ImageCropperDialog
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
-import java.io.File
 
 const val TAG: String = "Camera"
 
 val EMPTY_IMAGE_URI: Uri = Uri.parse("file://dev/null")
 
+val imageCropper = ImageCropper()
+
 @ExperimentalCoroutinesApi
 @ExperimentalPermissionsApi
 @Composable
 fun TakePicture(
-    modifier: Modifier,
-    onPictureTaken: (Uri) -> Unit
-){
-    var imageUri by remember { mutableStateOf(EMPTY_IMAGE_URI) }
+    onPictureTaken: (Bitmap) -> Unit,
+    onPictureCancel: () -> Unit,
+    modifier: Modifier
+) {
     CameraCapture(
         modifier = modifier,
-        onImageFile = { file ->
-            imageUri = file.toUri()
-            onPictureTaken(imageUri)
-        }
+        onImageFile = { bitmap ->
+            onPictureTaken(bitmap)
+        },
+        onPictureCancel =  { onPictureCancel() }
     )
 }
 
@@ -99,9 +108,12 @@ private fun CameraPreview(
 fun CameraCapture(
     modifier: Modifier = Modifier,
     cameraSelector: CameraSelector = CameraSelector.DEFAULT_BACK_CAMERA,
-    onImageFile: (File) -> Unit = {}
+    onImageFile: (Bitmap) -> Unit = {},
+    onPictureCancel: () -> Unit
 ) {
     val context = LocalContext.current
+    val imageCropper = rememberImageCropper()
+    var imageUri by remember { mutableStateOf<Uri?>(null) }
     Permission(
         permission = Manifest.permission.CAMERA,
         rational = "You need to take a picture, so I have to ask for permission.",
@@ -137,25 +149,43 @@ fun CameraCapture(
                 )
             }
             Box {
-                CameraPreview(
-                    modifier = modifier,
-                    onUseCase = {
-                        previewUseCase = it
+                if (imageUri != null) {
+                    imageCropper.cropState?.let { localCropState ->
+                        ImageCropperDialog(localCropState)
                     }
-                )
-                CapturePictureButton(
-                    modifier = Modifier
-                        .size(100.dp)
-                        .padding(16.dp)
-                        .align(Alignment.BottomCenter),
-                    onClick = {
-                        coroutineScope.launch {
-                            imageCaptureUseCase.takePicture(context.executor).let {
-                                onImageFile(it)
+                } else {
+                    CameraPreview(
+                        modifier = modifier,
+                        onUseCase = {
+                            previewUseCase = it
+                        }
+                    )
+                    CapturePictureButton(
+                        modifier = Modifier
+                            .size(100.dp)
+                            .padding(16.dp)
+                            .align(Alignment.BottomCenter),
+                        onClick = {
+                            coroutineScope.launch {
+                                imageCaptureUseCase.takePicture(context.executor).let {
+                                    imageUri = it.toUri()
+                                    imageUri?.let { localUri ->
+                                        when (val result: CropResult =
+                                            imageCropper.crop(localUri, context)) {
+                                            CropError.LoadingError -> {}
+                                            CropError.SavingError -> {}
+                                            CropResult.Cancelled -> onPictureCancel()
+                                            is CropResult.Success -> {
+                                                onImageFile(result.bitmap.asAndroidBitmap())
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
-                    }
-                )
+                    )
+                }
+
             }
             LaunchedEffect(previewUseCase) {
                 val cameraProvider = context.getCameraProvider()

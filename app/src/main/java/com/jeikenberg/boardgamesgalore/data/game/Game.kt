@@ -7,8 +7,6 @@ import com.jeikenberg.boardgamesgalore.util.GAME_DATABASE_GAME_TABLE_NAME
 
 @Entity(tableName = GAME_DATABASE_GAME_TABLE_NAME)
 data class Game(
-    @PrimaryKey(autoGenerate = true)
-    var gameId: Long = 0,
     val name: String,
     val maker: String,
     val rating: Double,
@@ -18,6 +16,8 @@ data class Game(
     val description: String,
     val gameIconUri: String
 ) {
+    @PrimaryKey(autoGenerate = true)
+    var gameId: Long = 0
     fun doesMatchSearchQuery(query: String): Boolean {
         val matchingCombinations = listOf(
             name

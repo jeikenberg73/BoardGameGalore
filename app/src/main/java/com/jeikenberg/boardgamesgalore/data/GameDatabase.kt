@@ -19,14 +19,16 @@ abstract class GameDatabase : RoomDatabase() {
         private var INSTANCE: GameDatabase? = null
 
         fun getInstance(context: Context): GameDatabase {
-            return INSTANCE ?: synchronized(this) {
+            val instance = INSTANCE ?: synchronized(this) {
                 INSTANCE ?: buildDatabase(context).also { INSTANCE = it }
             }
+            val version = instance.openHelper.readableDatabase.version
+            return instance
         }
 
         private fun buildDatabase(context: Context): GameDatabase {
             return Room.databaseBuilder(context, GameDatabase::class.java, GAME_DATABASE_NAME)
-                .createFromAsset(GAME_PRE_LOAD_DATABASE_NAME)
+//                .createFromAsset(GAME_PRE_LOAD_DATABASE_NAME)
                 .fallbackToDestructiveMigration()
                 .build()
         }
