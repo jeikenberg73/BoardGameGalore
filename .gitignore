@@ -2,6 +2,15 @@
 .gradle/
 build/
 
+# odd files
+caches/
+daemon/
+jdks/
+kotlin-profile/
+native/
+wrapper/
+android/
+
 # Local configuration file (sdk path, etc)
 local.properties
 
@@ -31,3 +40,6 @@ google-services.json
 
 # Android Profiling
 *.hprof
+
+# Temp files
+*.tmp
