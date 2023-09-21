@@ -70,11 +70,11 @@ class ImagePersistenceRepository {
 
     fun retrieveImage(
         @Nonnull contentResolver: ContentResolver,
-        @Nonnull game: Game
+        @Nonnull gameName: String,
+        @Nonnull gameIconUri: String,
     ): MediaStoreImage? {
         var image: MediaStoreImage? = null
 
-//        withContext(Dispatchers.IO) {
         val projection = arrayOf(
             MediaStore.Images.Media._ID,
             MediaStore.Images.Media.DISPLAY_NAME,
@@ -82,10 +82,10 @@ class ImagePersistenceRepository {
         )
 
         val selection = "${MediaStore.Images.Media.DISPLAY_NAME} = ?"
-        val selectionArgs = arrayOf("${game.name}.jpg")
+        val selectionArgs = arrayOf("$gameName.jpg")
 
         contentResolver.query(
-            Uri.parse(Uri.decode(game.gameIconUri)),
+            Uri.parse(Uri.decode(gameIconUri)),
             projection,
             selection,
             selectionArgs,
@@ -97,7 +97,6 @@ class ImagePersistenceRepository {
                 cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_ADDED)
             val displayNameColumn =
                 cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME)
-
 
             val id = cursor.getLong(idColumn)
             val dateModified = Date(TimeUnit.SECONDS.toMillis(cursor.getLong(dateModifiedColumn)))
@@ -111,7 +110,6 @@ class ImagePersistenceRepository {
             image = MediaStoreImage(id, displayName, dateModified, contentUri)
 
         }
-//        }
         return image
     }
 }

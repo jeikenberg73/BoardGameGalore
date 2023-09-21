@@ -203,7 +203,7 @@ fun GameSearchItem(
 //                }
                 val viewModel:GameSelectionViewModel = hiltViewModel()
                 val contentResolver = LocalContext.current.contentResolver
-                val gameMediaStoreImage = viewModel.getImage(contentResolver, game)
+                val gameMediaStoreImage = viewModel.getImageByGame(contentResolver, game)
                 if (checkUri(LocalContext.current, gameMediaStoreImage?.contentUri.toString())) {
                     GlideImage(
                         model = Uri.parse(gameMediaStoreImage?.contentUri.toString()),

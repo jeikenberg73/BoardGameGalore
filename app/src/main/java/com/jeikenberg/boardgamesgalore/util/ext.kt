@@ -36,6 +36,11 @@ fun NavHostController.navigateToAddGame(route: String, imageUri: Uri) {
     this.navigateSingleTopTo("${route}/${imageUri}")
 }
 
+fun NavHostController.navigateToImageCropper(route: String, imageUriString: String) {
+    navigate("$route/$imageUriString")
+//    this.navigateSingleTopTo("$route/$imageUriString")
+}
+
 @Suppress("BlockingMethodInNonBlockingContext")
 suspend fun Context.getCameraProvider(): ProcessCameraProvider =
     suspendCoroutine { continuation ->

@@ -3,14 +3,19 @@
 package com.jeikenberg.boardgamesgalore.navigation
 
 import android.graphics.Bitmap
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -22,9 +27,13 @@ import com.jeikenberg.boardgamesgalore.ui.gamedetails.GameInfoScreen
 import com.jeikenberg.boardgamesgalore.ui.gameselection.GameSelectionScreen
 import com.jeikenberg.boardgamesgalore.ui.utilscreens.AddGameScreen
 import com.jeikenberg.boardgamesgalore.ui.utilscreens.TakePicture
+import com.jeikenberg.boardgamesgalore.ui.utilscreens.UploadImageCompose
+import com.jeikenberg.boardgamesgalore.util.AlertDialogComponent
 import com.jeikenberg.boardgamesgalore.util.navigateSingleTopTo
 import com.jeikenberg.boardgamesgalore.util.navigateToDetails
+import com.jeikenberg.boardgamesgalore.viewmodels.AddGameViewModel
 import com.jeikenberg.boardgamesgalore.viewmodels.GameSelectionViewModel
+import com.mr0xf00.easycrop.rememberImageCropper
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 @ExperimentalCoilApi
@@ -35,8 +44,27 @@ fun GameNavHost(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController()
 ) {
+    val gameSelectionViewModel: GameSelectionViewModel = hiltViewModel()
+    val addGameViewModel: AddGameViewModel = hiltViewModel()
+    val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
+    var bitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var imageUri by remember { mutableStateOf<Uri?>(null) }
+    val imageCropper = rememberImageCropper()
+    var uploadedImageUri: Uri? by rememberSaveable {
+        mutableStateOf(null)
+    }
+    var showAlertDialogDialog: Boolean by rememberSaveable {
+        mutableStateOf(false)
+    }
     var hasTakenPicture: Boolean by rememberSaveable {
         mutableStateOf(false)
+    }
+    var alertDialogTitle: String by remember {
+        mutableStateOf("")
+    }
+    var alertDialogMessage: String by remember {
+        mutableStateOf("")
     }
     NavHost(
         navController = navController,
@@ -44,19 +72,17 @@ fun GameNavHost(
         modifier = modifier
     ) {
         composable(route = GameList.route) {
-            val viewModel: GameSelectionViewModel = hiltViewModel()
-
             // Need this to pull data from database to initialize the database.
-            val gameUiState by viewModel.gameUiState.collectAsState()
+            val gameUiState by gameSelectionViewModel.gameUiState.collectAsState()
 
-            val searchedGames by viewModel.searchedGames.collectAsState()
-            val searchText by viewModel.searchText.collectAsState()
-            val isSearching by viewModel.isSearching.collectAsState()
+            val searchedGames by gameSelectionViewModel.searchedGames.collectAsState()
+            val searchText by gameSelectionViewModel.searchText.collectAsState()
+            val isSearching by gameSelectionViewModel.isSearching.collectAsState()
             GameSelectionScreen(
                 searchText = searchText,
                 gameList = searchedGames,
                 isSearching = isSearching,
-                onValueChange = viewModel::onSearchTextChange,
+                onValueChange = gameSelectionViewModel::onSearchTextChange,
                 onAddGameClicked = {
                     navController.navigateSingleTopTo(AddGame.route)
                 },
@@ -64,8 +90,6 @@ fun GameNavHost(
             )
         }
         composable(route = AddGame.route) { navBackResult ->
-            val viewModel: GameSelectionViewModel = hiltViewModel()
-            var bitmap by remember { mutableStateOf<Bitmap?>(null) }
             navBackResult.savedStateHandle.get<Bitmap>("bitmap")?.let {
                 bitmap = it
             }
@@ -73,21 +97,32 @@ fun GameNavHost(
                 takePictureClick = {
                     navController.navigate(TakePicture.route)
                 },
-                uploadPictureClick = { },
+                uploadPictureClick = {
+                    navController.navigate(UploadImage.route)
+                },
                 bitmap = bitmap,
                 setHasTakenPicture = { hasTakenPicture = it },
                 hasTakenPicture = hasTakenPicture,
                 onGameSaved = {
+                    bitmap = null
+                    imageUri = null
+                    hasTakenPicture = false
                     navController.navigate(GameList.route)
                 },
                 onCancel = {
                     navController.navigate(GameList.route)
+                },
+                onTakePictureFailed = { title, message ->
+                    alertDialogTitle = title
+                    alertDialogMessage = message
+                    showAlertDialogDialog = true
                 },
                 modifier = modifier
             )
         }
         composable(route = TakePicture.route) {
             TakePicture(
+                imageCropper = imageCropper,
                 onPictureTaken = { bitmap ->
                     navController.popBackStack()
                     navController.currentBackStackEntry
@@ -129,5 +164,29 @@ fun GameNavHost(
                 modifier = modifier
             )
         }
+        composable(
+            route = UploadImage.route
+        ) {
+            UploadImageCompose(
+                onImageChosen = {bitmap ->
+                    navController.popBackStack()
+                    navController.currentBackStackEntry
+                        ?.savedStateHandle
+                        ?.set("bitmap", bitmap)
+                },
+                modifier = modifier
+            )
+        }
     }
+    AlertDialogComponent(
+        title = alertDialogTitle,
+        message = alertDialogMessage,
+        onDismissRequest = {
+            alertDialogTitle = ""
+            alertDialogMessage = ""
+            showAlertDialogDialog = false
+        },
+        showDialog = showAlertDialogDialog,
+        modifier = modifier
+    )
 }

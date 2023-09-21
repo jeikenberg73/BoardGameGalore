@@ -3,11 +3,9 @@ package com.jeikenberg.boardgamesgalore.ui.utilscreens
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
-import android.provider.MediaStore.Images.Media
 import android.provider.Settings
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -19,6 +17,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
@@ -36,18 +36,21 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -64,9 +67,9 @@ import com.jeikenberg.boardgamesgalore.ui.theme.BlueGradiantBackgroundStop
 import com.jeikenberg.boardgamesgalore.ui.theme.BoardGamesGaloreTheme
 import com.jeikenberg.boardgamesgalore.ui.theme.GreenColorStops
 import com.jeikenberg.boardgamesgalore.ui.theme.InterFontFamily
-import com.jeikenberg.boardgamesgalore.viewmodels.GameSelectionViewModel
+import com.jeikenberg.boardgamesgalore.util.AlertDialogComponent
+import com.jeikenberg.boardgamesgalore.viewmodels.AddGameViewModel
 import kotlinx.coroutines.runBlocking
-import java.io.File
 
 const val GAME_NAME = "Game Name"
 const val GAME_MAKER = "Game Maker"
@@ -80,19 +83,23 @@ const val GAME_ICON_IMAGE_URI = "Game Icon Image URI"
 
 @ExperimentalPermissionsApi
 @ExperimentalCoilApi
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalGlideComposeApi::class)
+@OptIn(
+    ExperimentalMaterial3Api::class, ExperimentalGlideComposeApi::class,
+    ExperimentalComposeUiApi::class
+)
 @Composable
 fun AddGameScreen(
     takePictureClick: () -> Unit,
     uploadPictureClick: () -> Unit,
     bitmap: Bitmap? = null,
     setHasTakenPicture: (Boolean) -> Unit,
-    hasTakenPicture: Boolean,
+    hasTakenPicture: Boolean = false,
     onGameSaved: () -> Unit,
     onCancel: () -> Unit,
+    onTakePictureFailed: (title: String, message: String) -> Unit,
     modifier: Modifier
 ) {
-    val viewModel: GameSelectionViewModel = hiltViewModel()
+    val viewModel: AddGameViewModel = hiltViewModel()
     var gameName: String by rememberSaveable {
         mutableStateOf("")
     }
@@ -129,6 +136,12 @@ fun AddGameScreen(
     var messageValue: String by rememberSaveable {
         mutableStateOf("")
     }
+    var isUploadingImage: Boolean by rememberSaveable {
+        mutableStateOf(true)
+    }
+    val (focusRequester) = FocusRequester.createRefs()
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     Scaffold(
         topBar = {
             val gameStats = mapOf(
@@ -145,11 +158,11 @@ fun AddGameScreen(
                 title = titleValue,
                 message = messageValue,
                 onDismissRequest = {
-                                   showDialog = false
+                    showDialog = false
                 },
                 showDialog = showDialog,
                 saveButtonClick = {
-                    saveGame(
+                    val didSave = saveGame(
                         gameStats[GAME_NAME]!!,
                         gameStats[GAME_MAKER]!!,
                         gameStats[GAME_RATING]!!,
@@ -165,7 +178,9 @@ fun AddGameScreen(
                         },
                         viewModel
                     )
-                    onGameSaved()
+                    if(didSave) {
+                        onGameSaved()
+                    }
                 },
                 saveButtonEnable = saveButtonEnable,
                 onCancel = onCancel,
@@ -200,6 +215,10 @@ fun AddGameScreen(
                     )
                 },
                 label = "Name",
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(
+                    onNext = { focusRequester.requestFocus() }
+                ),
                 modifier = modifier
                     .padding(top = 8.dp)
                     .padding(start = 8.dp)
@@ -222,6 +241,10 @@ fun AddGameScreen(
                     )
                 },
                 label = "Maker",
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(
+                    onNext = { focusRequester.requestFocus() }
+                ),
                 modifier = modifier
                     .padding(top = 8.dp)
                     .padding(start = 8.dp)
@@ -244,6 +267,10 @@ fun AddGameScreen(
                     )
                 },
                 label = "Rating",
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(
+                    onNext = { focusRequester.requestFocus() }
+                ),
                 modifier = modifier
                     .padding(top = 8.dp)
                     .padding(start = 8.dp)
@@ -266,6 +293,10 @@ fun AddGameScreen(
                     )
                 },
                 label = "Weight",
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(
+                    onNext = { focusRequester.requestFocus() }
+                ),
                 modifier = modifier
                     .padding(top = 8.dp)
                     .padding(start = 8.dp)
@@ -288,6 +319,10 @@ fun AddGameScreen(
                     )
                 },
                 label = "Number Of Players (e.g. 1-4 or 2)",
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(
+                    onNext = { focusRequester.requestFocus() }
+                ),
                 modifier = modifier
                     .padding(top = 8.dp)
                     .padding(start = 8.dp)
@@ -310,6 +345,10 @@ fun AddGameScreen(
                     )
                 },
                 label = "Play Time (Min) (e.g. 60-120 or 30)",
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(
+                    onNext = { focusRequester.requestFocus() }
+                ),
                 modifier = modifier
                     .padding(top = 8.dp)
                     .padding(start = 8.dp)
@@ -332,6 +371,10 @@ fun AddGameScreen(
                     )
                 },
                 label = "Game Description",
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(
+                    onDone = { keyboardController?.hide() }
+                ),
                 singleLine = false,
                 maxLines = 4,
                 modifier = modifier
@@ -353,7 +396,10 @@ fun AddGameScreen(
                     .align(Alignment.CenterHorizontally)
             ) {
                 Button(
-                    onClick = uploadPictureClick,
+                    onClick = {
+                        isUploadingImage = true
+                        uploadPictureClick()
+                    },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Transparent
                     ),
@@ -370,7 +416,17 @@ fun AddGameScreen(
                 }
                 Spacer(modifier = modifier.width(16.dp))
                 Button(
-                    onClick = takePictureClick,
+                    onClick = {
+                        if (gameName.isEmpty() || gameName.isBlank()) {
+                            onTakePictureFailed(
+                                "No Game Name",
+                                "The game needs a name before taking a picture."
+                            )
+                        } else {
+                            isUploadingImage = false
+                            takePictureClick()
+                        }
+                    },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Transparent
                     ),
@@ -387,9 +443,36 @@ fun AddGameScreen(
                 }
             }
             if (bitmap != null) {
-                // ToDo: Save image to file.
-
-                if (gameName != "") {
+                if (isUploadingImage) {
+                    if (!hasTakenPicture) {
+                        gameIconUri = viewModel.saveImage(
+                            LocalContext.current.contentResolver,
+                            gameName,
+                            bitmap
+                        )
+                        saveButtonEnable = checkSaveButtonEnable(
+                            name = gameName,
+                            maker = gameMaker,
+                            rating = gameRating,
+                            weight = gameWeight,
+                            numberOfPlayers = gameNumberOfPlayers,
+                            playTime = gamePlayTime,
+                            description = gameDescription,
+                            gameIconUri = gameIconUri.toString()
+                        )
+                        setHasTakenPicture(true)
+                    }
+                    GlideImage(
+                        model = bitmap,
+                        contentDescription = null,
+                        contentScale = ContentScale.FillBounds,
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .align(Alignment.CenterHorizontally)
+                            .size(50.dp)
+                            .clip(CircleShape)
+                    )
+                } else if (gameName != "") {
                     if (!hasTakenPicture) {
                         gameIconUri =
                             viewModel.saveImage(
@@ -410,7 +493,6 @@ fun AddGameScreen(
                         setHasTakenPicture(true)
                     }
                     gameIconUri?.let { localGameUri ->
-//                        if (checkUri(LocalContext.current, localGameUri.toString())) {
                         GlideImage(
                             model = Uri.parse(localGameUri.toString()),
                             contentDescription = null,
@@ -421,15 +503,6 @@ fun AddGameScreen(
                                 .size(50.dp)
                                 .clip(CircleShape)
                         )
-//                        } else {
-//                            EmptyIconImage(
-//                                modifier = modifier
-//                                    .padding(8.dp)
-//                                    .align(Alignment.CenterHorizontally)
-//                                    .size(50.dp)
-//                                    .clip(CircleShape)
-//                            )
-//                        }
                     } ?: run {
                         EmptyIconImage(
                             modifier = modifier
@@ -440,34 +513,6 @@ fun AddGameScreen(
                         )
                     }
                 }
-//                val context = LocalContext.current
-//                val permissionState = rememberPermissionState(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-//                PermissionRequired(
-//                    permissionState = permissionState,
-//                    permissionNotGrantedContent = {
-//                        Rational(
-//                            text = "The app needs to save the images to the phone, so I have to ask permission.",
-//                            onRequestPermission = {
-//                                permissionState.launchPermissionRequest()
-//                            })
-//                    },
-//                    permissionNotAvailableContent = {
-//                        PermissionRequestDialog(modifier = modifier)
-//                    }
-//                ) {
-//                    if (gameName != "") {
-//                        val imageUri =
-//                            viewModel.saveImage(context.contentResolver, gameName, bitmap)
-//                        gameIconUri = imageUri.toString()
-//                    }
-//                }
-//                Image(
-//                    painter = rememberImagePainter(bitmap),
-//                    contentDescription = "Captured image",
-//                    modifier = modifier
-//                        .padding(top = 16.dp)
-//                        .align(Alignment.CenterHorizontally)
-//                )
             }
         }
     }
@@ -589,7 +634,7 @@ fun TopBar(
                 .align(Alignment.CenterVertically)
                 .padding(start = 16.dp)
         ) {
-            Icon (
+            Icon(
                 imageVector = Icons.Default.ArrowBack,
                 contentDescription = null,
                 tint = Color.White,
@@ -636,86 +681,7 @@ fun TopBar(
     }
 }
 
-@Composable
-fun AlertDialogComponent(
-    title: String,
-    message: String,
-    onDismissRequest: () -> Unit,
-    showDialog: Boolean,
-    modifier: Modifier
-) {
-
-    if (showDialog) {
-        AlertDialog(
-            onDismissRequest = onDismissRequest,
-            containerColor = MaterialTheme.colorScheme.errorContainer,
-            titleContentColor = MaterialTheme.colorScheme.onErrorContainer,
-            textContentColor = MaterialTheme.colorScheme.onErrorContainer,
-            title = {
-                Text(
-                    text = title,
-                    textAlign = TextAlign.Center,
-                    modifier = modifier
-                )
-            },
-            text = {
-                Text(
-                    text = message,
-                    textAlign = TextAlign.Center,
-                    modifier = modifier
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = onDismissRequest
-                ) {
-                    Text(
-                        text = "Ok",
-                        color = MaterialTheme.colorScheme.onErrorContainer,
-                        modifier = modifier
-                    )
-                }
-            },
-            modifier = modifier
-        )
-    }
-}
-
-//@Composable
-//fun ErrorPopup(title: String, message: String, modifier: Modifier) {
-//    AlertDialog(onDismissRequest = { /*TODO*/ }, confirmButton = { /*TODO*/ }) {
-//        Column(
-//            horizontalAlignment = Alignment.CenterHorizontally,
-//            modifier = modifier
-//                .background(MaterialTheme.colorScheme.errorContainer)
-//        ) {
-//            Text(
-//                text = title,
-//                style = MaterialTheme.typography.headlineLarge,
-//                color = MaterialTheme.colorScheme.onErrorContainer,
-//                textAlign = TextAlign.Center,
-//                modifier = modifier
-//                    .padding(16.dp)
-//            )
-//            Spacer(
-//                modifier = modifier
-//                    .height(3.dp)
-//                    .background(Color.LightGray)
-//                    .width(128.dp)
-//            )
-//            Text(
-//                text = message,
-//                style = MaterialTheme.typography.bodyLarge,
-//                color = MaterialTheme.colorScheme.onErrorContainer,
-//                textAlign = TextAlign.Center,
-//                modifier = modifier
-//                    .padding(16.dp)
-//            )
-//        }
-//    }
-//}
-
-private fun saveGame(
+private fun saveGame (
     name: String,
     maker: String,
     rating: String,
@@ -725,43 +691,43 @@ private fun saveGame(
     description: String,
     gameIcon: String,
     errorPopup: (errorTitle: String, errorMessage: String) -> Unit,
-    viewModel: GameSelectionViewModel
-) {
+    viewModel: AddGameViewModel
+): Boolean {
     if (name.isEmpty() || name.isBlank()) {
         errorPopup("Name Not Correct", "The game needs a correct name.")
-        return
+        return false
     }
 
     if (maker.isEmpty() || maker.isBlank()) {
         errorPopup("Maker Not Correct", "The game needs a correct maker.")
-        return
+        return false
     }
 
     val ratingNumber =
         if (rating.isEmpty() || rating.isBlank()) {
             errorPopup("Rating Not Correct", "The game needs a correct rating.")
-            return
+            return false
         } else {
             rating.toDoubleOrNull() ?: run {
                 errorPopup(
                     "Rating Not Correct",
                     "Please check the rating and try again."
                 )
-                return
+                return false
             }
         }
 
     val weightNumber =
         if (weight.isEmpty() || weight.isBlank()) {
             errorPopup("Weight Not Correct", "The game needs a correct weight.")
-            return
+            return false
         } else {
             weight.toDoubleOrNull() ?: run {
                 errorPopup(
                     "Weight Not Correct",
                     "Please check the weight and try again."
                 )
-                return
+                return false
             }
         }
 
@@ -770,7 +736,7 @@ private fun saveGame(
             "Number Of Players Not Correct",
             "The game needs a number of players"
         )
-        return
+        return false
     } else {
         val regex = Regex(
             pattern = "^[0-9]+(-[0-9]+)",
@@ -783,7 +749,7 @@ private fun saveGame(
                 "Number Of Players Not Correct",
                 "Please check the number of players. It needs to use the format X-Y where X is the least amount of players and Y is the most amount of players (e.g. 1-4)."
             )
-            return
+            return false
         }
     }
 
@@ -792,10 +758,10 @@ private fun saveGame(
             "Play Time Not Correct",
             "The game needs an amount of play time."
         )
-        return
+        return false
     } else {
         val regex = Regex(
-            pattern = "^[0-9]+(-[0-9]+)",
+            pattern = "^[0-9]+(-*[0-9]*)",
             options = setOf(RegexOption.IGNORE_CASE)
         )
         if (regex.matches(playTime.trim())) {
@@ -805,7 +771,7 @@ private fun saveGame(
                 "Play Time Not Correct",
                 "Please check the play time. It needs to use the format X-Y where X it the shortest play time in minutes and Y is the longest play time in minutes (e.g. 60-120)"
             )
-            return
+            return false
         }
     }
 
@@ -814,7 +780,7 @@ private fun saveGame(
             "Description Not Correct",
             "The game needs a description."
         )
-        return
+        return false
     }
 
     val game = Game(
@@ -830,6 +796,8 @@ private fun saveGame(
     runBlocking {
         viewModel.insertGame(game)
     }
+
+    return true
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -840,6 +808,8 @@ fun GameTextField(
     label: String,
     singleLine: Boolean = true,
     maxLines: Int = 1,
+    keyboardOptions: KeyboardOptions,
+    keyboardActions: KeyboardActions,
     modifier: Modifier
 ) {
     TextField(
@@ -868,7 +838,9 @@ fun GameTextField(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = modifier
             )
-        }
+        },
+        keyboardOptions = keyboardOptions,
+        keyboardActions = keyboardActions
     )
 }
 

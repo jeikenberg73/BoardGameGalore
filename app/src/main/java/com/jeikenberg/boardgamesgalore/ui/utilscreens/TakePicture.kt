@@ -53,24 +53,24 @@ import kotlinx.coroutines.launch
 
 const val TAG: String = "Camera"
 
-val EMPTY_IMAGE_URI: Uri = Uri.parse("file://dev/null")
-
-val imageCropper = ImageCropper()
+//val EMPTY_IMAGE_URI: Uri = Uri.parse("file://dev/null")
 
 @ExperimentalCoroutinesApi
 @ExperimentalPermissionsApi
 @Composable
 fun TakePicture(
+    imageCropper: ImageCropper,
     onPictureTaken: (Bitmap) -> Unit,
     onPictureCancel: () -> Unit,
     modifier: Modifier
 ) {
     CameraCapture(
+        imageCropper = imageCropper,
         modifier = modifier,
         onImageFile = { bitmap ->
             onPictureTaken(bitmap)
         },
-        onPictureCancel =  { onPictureCancel() }
+        onPictureCancel = { onPictureCancel() }
     )
 }
 
@@ -106,13 +106,13 @@ private fun CameraPreview(
 @ExperimentalCoroutinesApi
 @Composable
 fun CameraCapture(
+    imageCropper: ImageCropper,
     modifier: Modifier = Modifier,
     cameraSelector: CameraSelector = CameraSelector.DEFAULT_BACK_CAMERA,
     onImageFile: (Bitmap) -> Unit = {},
     onPictureCancel: () -> Unit
 ) {
     val context = LocalContext.current
-    val imageCropper = rememberImageCropper()
     var imageUri by remember { mutableStateOf<Uri?>(null) }
     Permission(
         permission = Manifest.permission.CAMERA,
@@ -185,7 +185,6 @@ fun CameraCapture(
                         }
                     )
                 }
-
             }
             LaunchedEffect(previewUseCase) {
                 val cameraProvider = context.getCameraProvider()

@@ -45,6 +45,16 @@ object GameImages: GameDestination {
     )
 }
 
+object UploadImage: GameDestination {
+    override val route = "uploadImage"
+//    val icon = Icons.Filled.Image
+//    const val uploadedUriTypesArgs = "uploadedImageUri"
+//    val routeWithArgs = "$route/{$uploadedUriTypesArgs}"
+//    val arguments = listOf(
+//        navArgument(uploadedUriTypesArgs) { type = NavType.StringType }
+//    )
+}
+
 object GameImage: GameDestination {
     override val route = "gameImage"
 }

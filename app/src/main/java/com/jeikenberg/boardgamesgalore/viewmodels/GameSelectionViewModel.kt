@@ -77,18 +77,12 @@ class GameSelectionViewModel @Inject constructor(
         _searchText.value = text
     }
 
-    suspend fun insertGame(game: Game) {
-        CoroutineScope(viewModelScope.coroutineContext).launch {
-            gameRepository.insertGame(game)
-        }
+    fun getImageByGame(contentResolver: ContentResolver, game: Game): MediaStoreImage? {
+       return imagePersistenceRepository.retrieveImage(contentResolver, game.name, game.gameIconUri)
     }
 
-    fun saveImage(contentResolver: ContentResolver, fileName: String, bitmap: Bitmap): Uri {
-        return imagePersistenceRepository.saveImage(contentResolver, fileName, bitmap)
-    }
-
-    fun getImage(contentResolver: ContentResolver, game: Game): MediaStoreImage? {
-       return imagePersistenceRepository.retrieveImage(contentResolver, game)
+    fun getImageByName(contentResolver: ContentResolver, gameName: String, gameIconUri: String): MediaStoreImage? {
+        return imagePersistenceRepository.retrieveImage(contentResolver, gameName, gameIconUri)
     }
 }
 
