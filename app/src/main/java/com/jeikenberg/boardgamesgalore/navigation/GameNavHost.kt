@@ -90,9 +90,6 @@ fun GameNavHost(
             )
         }
         composable(route = AddGame.route) { navBackResult ->
-            navBackResult.savedStateHandle.get<Bitmap>("bitmap")?.let {
-                bitmap = it
-            }
             AddGameScreen(
                 takePictureClick = {
                     navController.navigate(TakePicture.route)
@@ -123,11 +120,9 @@ fun GameNavHost(
         composable(route = TakePicture.route) {
             TakePicture(
                 imageCropper = imageCropper,
-                onPictureTaken = { bitmap ->
+                onPictureTaken = { localBitmap ->
+                    bitmap = localBitmap
                     navController.popBackStack()
-                    navController.currentBackStackEntry
-                        ?.savedStateHandle
-                        ?.set("bitmap", bitmap)
                 },
                 onPictureCancel = {
                     hasTakenPicture = false
@@ -168,11 +163,9 @@ fun GameNavHost(
             route = UploadImage.route
         ) {
             UploadImageCompose(
-                onImageChosen = {bitmap ->
+                onImageChosen = {localBitmap ->
+                    bitmap = localBitmap
                     navController.popBackStack()
-                    navController.currentBackStackEntry
-                        ?.savedStateHandle
-                        ?.set("bitmap", bitmap)
                 },
                 modifier = modifier
             )
