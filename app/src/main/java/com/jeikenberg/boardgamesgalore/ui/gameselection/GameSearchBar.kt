@@ -16,7 +16,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import com.jeikenberg.boardgamesgalore.R
 import com.jeikenberg.boardgamesgalore.ui.theme.BlueGradiantBackgroundStart
 import com.jeikenberg.boardgamesgalore.ui.theme.BlueGradiantBackgroundStop
 import com.jeikenberg.boardgamesgalore.ui.theme.BoardGamesGaloreTheme
@@ -64,7 +66,7 @@ fun GameSearchBar(
             .background(Brush.verticalGradient(colorStops = colorStops)),
         placeholder = {
             Text(
-                text = "Search"
+                text = stringResource(R.string.search)
             )
         }
     )
@@ -78,7 +80,7 @@ fun GameSearchBar(
 fun GameSearchBarPreview() {
     BoardGamesGaloreTheme {
         GameSearchBar(
-            searchText = "Search",
+            searchText = stringResource(R.string.search),
             onValueChange = {},
             modifier = Modifier
         )

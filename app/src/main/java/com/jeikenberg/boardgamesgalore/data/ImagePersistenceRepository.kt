@@ -1,27 +1,23 @@
 package com.jeikenberg.boardgamesgalore.data
 
-import android.app.Application
 import android.content.ContentResolver
 import android.content.ContentUris
 import android.content.ContentValues
+import android.database.Cursor
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Environment
 import android.provider.MediaStore
-import com.jeikenberg.boardgamesgalore.data.game.Game
+import android.provider.MediaStore.Images
+import androidx.core.net.toFile
 import com.jeikenberg.boardgamesgalore.util.GAME_SAVE_DIRECTORY
 import com.jeikenberg.boardgamesgalore.util.MediaStoreImage
-import dagger.hilt.android.internal.Contexts.getApplication
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
-import java.text.SimpleDateFormat
 import java.util.Date
-import java.util.Locale
 import java.util.concurrent.TimeUnit
 import javax.annotation.Nonnull
-import javax.annotation.Nullable
+
 
 class ImagePersistenceRepository {
     companion object {
@@ -51,7 +47,7 @@ class ImagePersistenceRepository {
 
         return kotlin.runCatching {
             with(contentResolver) {
-                insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)?.also {
+                insert(Images.Media.EXTERNAL_CONTENT_URI, values)?.also {
                     uri = it
 
                     openOutputStream(it)?.use { stream ->
@@ -68,6 +64,14 @@ class ImagePersistenceRepository {
         }
     }
 
+    fun removeImage(
+        @Nonnull contentResolver: ContentResolver,
+        @Nonnull imageUri: Uri
+    ) {
+        contentResolver.delete(imageUri, null)
+//        imageUri.toFile().delete()
+    }
+
     fun retrieveImage(
         @Nonnull contentResolver: ContentResolver,
         @Nonnull gameName: String,
@@ -76,12 +80,12 @@ class ImagePersistenceRepository {
         var image: MediaStoreImage? = null
 
         val projection = arrayOf(
-            MediaStore.Images.Media._ID,
-            MediaStore.Images.Media.DISPLAY_NAME,
-            MediaStore.Images.Media.DATE_ADDED
+            Images.Media._ID,
+            Images.Media.DISPLAY_NAME,
+            Images.Media.DATE_ADDED
         )
 
-        val selection = "${MediaStore.Images.Media.DISPLAY_NAME} = ?"
+        val selection = "${Images.Media.DISPLAY_NAME} = ?"
         val selectionArgs = arrayOf("$gameName.jpg")
 
         contentResolver.query(
@@ -91,19 +95,20 @@ class ImagePersistenceRepository {
             selectionArgs,
             null
         )?.use { cursor ->
-            cursor.moveToFirst()
-            val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
-            val dateModifiedColumn =
-                cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_ADDED)
-            val displayNameColumn =
-                cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME)
 
+            val idColumn = cursor.getColumnIndexOrThrow(Images.Media._ID)
+            val dateModifiedColumn =
+                cursor.getColumnIndexOrThrow(Images.Media.DATE_ADDED)
+            val displayNameColumn =
+                cursor.getColumnIndexOrThrow(Images.Media.DISPLAY_NAME)
+
+            cursor.moveToFirst()
             val id = cursor.getLong(idColumn)
             val dateModified = Date(TimeUnit.SECONDS.toMillis(cursor.getLong(dateModifiedColumn)))
             val displayName = cursor.getString(displayNameColumn)
 
             val contentUri = ContentUris.withAppendedId(
-                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                Images.Media.EXTERNAL_CONTENT_URI,
                 id
             )
 

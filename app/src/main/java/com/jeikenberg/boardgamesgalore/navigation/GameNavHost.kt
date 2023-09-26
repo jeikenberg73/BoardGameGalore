@@ -4,8 +4,6 @@ package com.jeikenberg.boardgamesgalore.navigation
 
 import android.graphics.Bitmap
 import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -23,6 +21,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import coil.annotation.ExperimentalCoilApi
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.jeikenberg.boardgamesgalore.data.game.Game
 import com.jeikenberg.boardgamesgalore.ui.gamedetails.GameInfoScreen
 import com.jeikenberg.boardgamesgalore.ui.gameselection.GameSelectionScreen
 import com.jeikenberg.boardgamesgalore.ui.utilscreens.AddGameScreen
@@ -66,6 +65,12 @@ fun GameNavHost(
     var alertDialogMessage: String by remember {
         mutableStateOf("")
     }
+    var gameToEdit: Game? by rememberSaveable {
+        mutableStateOf(null)
+    }
+    var isAddEditGameInitialized: Boolean by rememberSaveable {
+        mutableStateOf(false)
+    }
     NavHost(
         navController = navController,
         startDestination = GameList.route,
@@ -78,19 +83,30 @@ fun GameNavHost(
             val searchedGames by gameSelectionViewModel.searchedGames.collectAsState()
             val searchText by gameSelectionViewModel.searchText.collectAsState()
             val isSearching by gameSelectionViewModel.isSearching.collectAsState()
+            isAddEditGameInitialized = false
             GameSelectionScreen(
                 searchText = searchText,
                 gameList = searchedGames,
                 isSearching = isSearching,
                 onValueChange = gameSelectionViewModel::onSearchTextChange,
                 onAddGameClicked = {
+                    gameToEdit = null
+                    navController.navigateSingleTopTo(AddGame.route)
+                },
+                onEditGameClicked = { game ->
+                    gameToEdit = game
                     navController.navigateSingleTopTo(AddGame.route)
                 },
                 modifier = modifier
             )
         }
-        composable(route = AddGame.route) { navBackResult ->
+        composable(route = AddGame.route) {
             AddGameScreen(
+                game = gameToEdit,
+                isInitialized = isAddEditGameInitialized,
+                onInitializing = { isInitialized ->
+                    isAddEditGameInitialized = isInitialized
+                },
                 takePictureClick = {
                     navController.navigate(TakePicture.route)
                 },
@@ -106,7 +122,14 @@ fun GameNavHost(
                     hasTakenPicture = false
                     navController.navigate(GameList.route)
                 },
+                onGameNotSaved = {
+                    bitmap = null
+                    imageUri = null
+                    hasTakenPicture = false
+                    navController.navigate(GameList.route)
+                },
                 onCancel = {
+                    isAddEditGameInitialized = false
                     navController.navigate(GameList.route)
                 },
                 onTakePictureFailed = { title, message ->
@@ -163,7 +186,7 @@ fun GameNavHost(
             route = UploadImage.route
         ) {
             UploadImageCompose(
-                onImageChosen = {localBitmap ->
+                onImageChosen = { localBitmap ->
                     bitmap = localBitmap
                     navController.popBackStack()
                 },

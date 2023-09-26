@@ -7,14 +7,14 @@ import com.jeikenberg.boardgamesgalore.util.GAME_DATABASE_GAME_TABLE_NAME
 
 @Entity(tableName = GAME_DATABASE_GAME_TABLE_NAME)
 data class Game(
-    val name: String,
-    val maker: String,
-    val rating: Double,
-    val weight: Double,
-    val numberOfPlayers: String,
-    val playTime: String,
-    val description: String,
-    val gameIconUri: String
+    var name: String,
+    var maker: String,
+    var rating: Double,
+    var weight: Double,
+    var numberOfPlayers: String,
+    var playTime: String,
+    var description: String,
+    var gameIconUri: String
 ) {
     @PrimaryKey(autoGenerate = true)
     var gameId: Long = 0

@@ -1,5 +1,6 @@
 package com.jeikenberg.boardgamesgalore.ui.utilscreens
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
@@ -24,11 +25,13 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
+import com.jeikenberg.boardgamesgalore.R
 import com.jeikenberg.boardgamesgalore.ui.theme.BoardGamesGaloreTheme
 import com.mr0xf00.easycrop.CropError
 import com.mr0xf00.easycrop.CropResult
@@ -149,10 +152,11 @@ fun LoadingDialog(
 
 @Composable
 fun CropperLoading.getMessage(): String {
+    val context = LocalContext.current
     return remember(this) {
         when (this) {
-            CropperLoading.PreparingImage -> "Preparing Image"
-            CropperLoading.SavingResult -> "Saving Result"
+            CropperLoading.PreparingImage -> context.getString(R.string.cropper_preparing_image)
+            CropperLoading.SavingResult -> context.getString(R.string.cropper_saving_result)
         }
     }
 }
@@ -165,14 +169,14 @@ fun CropErrorDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         buttons = { /*TODO*/ },
-        text = { Text(error.getMessage()) }
+        text = { Text(error.getMessage(LocalContext.current)) }
     )
 }
 
 @Composable
-fun CropError.getMessage(): String = remember(this) {
+fun CropError.getMessage(context: Context): String = remember(this) {
     when (this) {
-        CropError.LoadingError -> "Error while opening the image!"
-        CropError.SavingError -> "Error while saving the image!"
+        CropError.LoadingError -> context.getString(R.string.cropper_error_while_opening_the_image)
+        CropError.SavingError -> context.getString(R.string.cropper_error_while_saving_the_image)
     }
 }

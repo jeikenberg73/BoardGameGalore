@@ -1,20 +1,29 @@
 package com.jeikenberg.boardgamesgalore.util
 
-import android.content.Context
-import android.graphics.Bitmap
-import android.net.Uri
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Text
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import com.mr0xf00.easycrop.CropError
-import com.mr0xf00.easycrop.CropResult
-import com.mr0xf00.easycrop.crop
-
+import androidx.compose.ui.unit.dp
+import com.jeikenberg.boardgamesgalore.R
+import com.jeikenberg.boardgamesgalore.ui.theme.GreenColorStops
 
 @Composable
 fun AlertDialogComponent(
@@ -49,7 +58,7 @@ fun AlertDialogComponent(
                     onClick = onDismissRequest
                 ) {
                     Text(
-                        text = "Ok",
+                        text = stringResource(id = R.string.ok),
                         color = MaterialTheme.colorScheme.onErrorContainer,
                         modifier = modifier
                     )
@@ -60,60 +69,58 @@ fun AlertDialogComponent(
     }
 }
 
-//suspend fun cropImage(
-//    imageUri: Uri,
-//    onPictureCancel: () -> Unit,
-//    onImageFile: (bitmap: Bitmap) -> Unit,
-//    context: Context
-//) {
-//    when (val result: CropResult =
-//        imageCropper.crop(imageUri, context)) {
-//        CropError.LoadingError -> {}
-//        CropError.SavingError -> {}
-//        CropResult.Cancelled -> onPictureCancel()
-//        is CropResult.Success -> {
-//            onImageFile(result.bitmap.asAndroidBitmap())
-//        }
-//    }
-//}
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun GameTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    singleLine: Boolean = true,
+    maxLines: Int = 1,
+    keyboardOptions: KeyboardOptions,
+    keyboardActions: KeyboardActions,
+    modifier: Modifier
+) {
+    TextField(
+        modifier = modifier
+            .background(
+                brush = Brush.verticalGradient(colorStops = GreenColorStops),
+                shape = RoundedCornerShape(8.dp)
+            )
+            .fillMaxWidth(),
+        textStyle = MaterialTheme.typography.titleLarge,
+        colors = TextFieldDefaults.textFieldColors(
+            textColor = MaterialTheme.colorScheme.onSecondary,
+            containerColor = Color.Transparent,
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent
+        ),
+        singleLine = singleLine,
+        maxLines = maxLines,
+        value = value,
+        onValueChange = onValueChange,
+        placeholder = {
+            Text(
+                text = label,
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = modifier
+            )
+        },
+        keyboardOptions = keyboardOptions,
+        keyboardActions = keyboardActions
+    )
+}
 
-
-//private val CropperDialogProperties = @OptIn(ExperimentalComposeUiApi::class) (DialogProperties(
-//    usePlatformDefaultWidth = false,
-//    dismissOnBackPress = false,
-//    dismissOnClickOutside = false
-//))
-//@Composable
-//fun ImageCropperDialog(
-//    state: CropState,
-//    style: CropperStyle = DefaultCropperStyle,
-//    dialogProperties: DialogProperties = CropperDialogProperties,
-//    dialogPadding: PaddingValues = PaddingValues(16.dp),
-//    dialogShape: Shape = RoundedCornerShape(8.dp),
-//    topBar: @Composable (CropState) -> Unit = { DefaultTopBar(it) },
-//    cropControls: @Composable BoxScope.(CropState) -> Unit = { DefaultControls(it) }
-//) {
-//    CompositionLocalProvider(LocalCropperStyle provides style) {
-//        Dialog(
-//            onDismissRequest = { state.done(accept = false) },
-//            properties = dialogProperties,
-//        ) {
-//            Surface(
-//                modifier = Modifier.padding(dialogPadding),
-//                shape = dialogShape,
-//            ) {
-//                Column {
-//                    topBar(state)
-//                    Box(
-//                        modifier = Modifier
-//                            .weight(1f)
-//                            .clipToBounds()
-//                    ) {
-//                        CropperPreview(state = state, modifier = Modifier.fillMaxSize())
-//                        cropControls(state)
-//                    }
-//                }
-//            }
-//        }
-//    }
-//}
+@Composable
+fun EmptyIconImage(
+    modifier: Modifier
+) {
+    Image(
+        painter = painterResource(R.drawable.token),
+        contentDescription = null,
+        contentScale = ContentScale.Crop,
+        modifier = modifier
+    )
+}

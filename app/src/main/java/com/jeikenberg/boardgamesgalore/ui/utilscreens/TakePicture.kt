@@ -32,12 +32,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toUri
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.jeikenberg.boardgamesgalore.R
 import com.jeikenberg.boardgamesgalore.util.CapturePictureButton
 import com.jeikenberg.boardgamesgalore.util.Log
+import com.jeikenberg.boardgamesgalore.util.PACKAGE_LITERAL
 import com.jeikenberg.boardgamesgalore.util.Permission
 import com.jeikenberg.boardgamesgalore.util.executor
 import com.jeikenberg.boardgamesgalore.util.getCameraProvider
@@ -116,7 +119,7 @@ fun CameraCapture(
     var imageUri by remember { mutableStateOf<Uri?>(null) }
     Permission(
         permission = Manifest.permission.CAMERA,
-        rational = "You need to take a picture, so I have to ask for permission.",
+        rational = stringResource(R.string.take_picture_permission_rational_text),
         permissionNotAvailableContent = {
             Column(modifier) {
                 Text("O noes! No Camera!")
@@ -125,10 +128,10 @@ fun CameraCapture(
                     context.startActivity(
                         Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
                             .apply {
-                                data = Uri.fromParts("package", context.packageName, null)
+                                data = Uri.fromParts(PACKAGE_LITERAL, context.packageName, null)
                             })
                 }) {
-                    Text("Open Settings")
+                    Text(stringResource(R.string.open_settings_text))
                 }
             }
         }

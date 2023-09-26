@@ -32,8 +32,18 @@ class AddGameViewModel @Inject constructor(
         }
     }
 
+    suspend fun updateGame(game: Game) {
+        CoroutineScope(viewModelScope.coroutineContext).launch {
+            gameRepository.updateGame(game)
+        }
+    }
+
     fun saveImage(contentResolver: ContentResolver, fileName: String, bitmap: Bitmap): Uri {
         return imagePersistenceRepository.saveImage(contentResolver, fileName, bitmap)
+    }
+
+    fun deleteImage(contentResolver: ContentResolver, imageUri: Uri) {
+        imagePersistenceRepository.removeImage(contentResolver, imageUri)
     }
 
     fun getImageByGame(contentResolver: ContentResolver, game: Game): MediaStoreImage? {

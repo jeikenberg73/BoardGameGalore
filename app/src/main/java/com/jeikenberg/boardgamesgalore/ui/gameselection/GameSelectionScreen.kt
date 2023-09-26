@@ -1,6 +1,5 @@
 package com.jeikenberg.boardgamesgalore.ui.gameselection
 
-import android.content.Context
 import android.content.res.Configuration
 import android.net.Uri
 import androidx.compose.foundation.Image
@@ -10,10 +9,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -22,6 +19,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -40,13 +38,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.jeikenberg.boardgamesgalore.R
@@ -54,11 +52,13 @@ import com.jeikenberg.boardgamesgalore.data.game.Game
 import com.jeikenberg.boardgamesgalore.ui.theme.BoardGamesGaloreTheme
 import com.jeikenberg.boardgamesgalore.ui.theme.GreenGradiantBackgroundStart
 import com.jeikenberg.boardgamesgalore.ui.theme.GreenGradiantBackgroundStop
-import com.jeikenberg.boardgamesgalore.util.Log
+import com.jeikenberg.boardgamesgalore.ui.utilscreens.TopSearchBar
+import com.jeikenberg.boardgamesgalore.util.MediaStoreImage
 import com.jeikenberg.boardgamesgalore.util.checkUri
 import com.jeikenberg.boardgamesgalore.viewmodels.GameSelectionViewModel
-import java.io.File
-import java.io.InputStream
+import java.time.LocalDate
+import java.time.ZoneId
+import java.util.Date
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -68,12 +68,15 @@ fun GameSelectionScreen(
     isSearching: Boolean = false,
     onValueChange: (String) -> Unit,
     onAddGameClicked: () -> Unit,
+    onEditGameClicked: (Game) -> Unit,
     modifier: Modifier
 ) {
+    val viewModel: GameSelectionViewModel = hiltViewModel()
+    val contentResolver = LocalContext.current.contentResolver
     Scaffold(
         topBar = {
             val isVisible = gameList.isNotEmpty()
-            TopBar(
+            TopSearchBar(
                 searchText = searchText,
                 onValueChange = onValueChange,
                 isVisible = isVisible,
@@ -109,7 +112,7 @@ fun GameSelectionScreen(
                     .background(MaterialTheme.colorScheme.primary)
             ) {
                 Text(
-                    text = "No Games In Database. \nPlease add a game.",
+                    text = stringResource(R.string.game_selection_please_add_game),
                     fontSize = 32.sp,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center
@@ -138,7 +141,16 @@ fun GameSelectionScreen(
                             .background(MaterialTheme.colorScheme.primary)
                     ) {
                         items(items = gameList, key = { it.gameId }) { game ->
-                            GameSearchItem(onGameClicked = {}, game = game, modifier = modifier)
+                            val gameImage = viewModel.getImageByGame(contentResolver, game)
+                            GameSearchItem(
+                                onGameClicked = {},
+                                game = game,
+                                gameImage = gameImage,
+                                onGameEditClicked = {
+                                    onEditGameClicked(game)
+                                },
+                                modifier = modifier
+                            )
                         }
                     }
                 }
@@ -147,27 +159,13 @@ fun GameSelectionScreen(
     }
 }
 
-@Composable
-fun TopBar(
-    searchText: String,
-    onValueChange: (String) -> Unit,
-    isVisible: Boolean = false,
-    modifier: Modifier
-) {
-    if(isVisible) {
-        GameSearchBar(
-            searchText = searchText,
-            onValueChange = onValueChange,
-            modifier = modifier
-        )
-    }
-}
-
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 fun GameSearchItem(
     onGameClicked: (Long) -> Unit,
+    onGameEditClicked: () -> Unit,
     game: Game,
+    gameImage: MediaStoreImage?,
     modifier: Modifier
 ) {
     val colorStops = arrayOf(
@@ -189,24 +187,12 @@ fun GameSearchItem(
                 modifier = modifier
                     .fillMaxSize()
                     .clickable {
-                        onGameClicked
+                        onGameClicked(game.gameId)
                     }
             ) {
-                // Use GlideImage when ready to view on phone
-//                val uri = Uri.parse(game.gameIconUri)
-//                LocalContext.current.contentResolver.openFileDescriptor(uri, "r").use { fileDescriptor ->
-//                    if (fileDescriptor == null) {
-//                        throw NullPointerException("ParcelFileDescriptor from $uri was null")
-//                    }
-//                    val path = "/proc/${android.os.Process.myPid()}/fd/${fileDescriptor.fd}"
-//                    val fileUri = Uri.fromFile(File(path).canonicalFile)
-//                }
-                val viewModel:GameSelectionViewModel = hiltViewModel()
-                val contentResolver = LocalContext.current.contentResolver
-                val gameMediaStoreImage = viewModel.getImageByGame(contentResolver, game)
-                if (checkUri(LocalContext.current, gameMediaStoreImage?.contentUri.toString())) {
+                if (checkUri(LocalContext.current, gameImage?.contentUri.toString())) {
                     GlideImage(
-                        model = Uri.parse(gameMediaStoreImage?.contentUri.toString()),
+                        model = Uri.parse(gameImage?.contentUri.toString()),
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
@@ -230,6 +216,7 @@ fun GameSearchItem(
                 Column(
                     modifier = Modifier
                         .align(Alignment.CenterVertically)
+                        .weight(1f)
                 ) {
                     Text(
                         text = game.name,
@@ -237,11 +224,21 @@ fun GameSearchItem(
                         modifier = Modifier
                     )
                     Text(
-                        text = "By: ${game.maker}",
+                        text = stringResource(R.string.by_label, game.maker),
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier
                     )
                 }
+                Icon(
+                    imageVector = Icons.Default.MoreVert,
+                    contentDescription = null,
+                    modifier = modifier
+                        .align(Alignment.CenterVertically)
+                        .clickable {
+                            onGameEditClicked()
+                        }
+                        .padding(end = 8.dp)
+                )
 
             }
         }
@@ -328,48 +325,52 @@ fun getFakeGameList(): List<Game> {
     return games
 }
 
-@Preview(
-    uiMode = Configuration.UI_MODE_NIGHT_NO,
-    showBackground = true
-)
-@Composable
-fun GameSearchEmptyPreview() {
-    BoardGamesGaloreTheme {
-        GameSelectionScreen(
-            searchText = "",
-            gameList = listOf(),
-            onValueChange = {},
-            onAddGameClicked = {},
-            modifier = Modifier
-        )
-    }
-}
-
-@Preview(
-    uiMode = Configuration.UI_MODE_NIGHT_NO,
-    showBackground = true
-)
-@Composable
-fun GameSelectionScreenAllGamesPreview() {
-    BoardGamesGaloreTheme {
-        val games = getFakeGameList()
-        GameSelectionScreen(
-            searchText = "",
-            gameList = games,
-            onValueChange = {},
-            onAddGameClicked = {},
-            modifier = Modifier
-        )
-    }
-}
-
-@Preview(showBackground = true, widthDp = 320, heightDp = 80)
-@Composable
-fun GameSearchItemPreview() {
-    GameSearchItem(
-        game = getFakeGame(),
-        onGameClicked = {},
-        modifier = Modifier.fillMaxWidth()
-    )
-}
+//@Preview(
+//    uiMode = Configuration.UI_MODE_NIGHT_NO,
+//    showBackground = true
+//)
+//@Composable
+//fun GameSearchEmptyPreview() {
+//    BoardGamesGaloreTheme {
+//        GameSelectionScreen(
+//            searchText = "",
+//            gameList = listOf(),
+//            onValueChange = {},
+//            onAddGameClicked = {},
+//            modifier = Modifier
+//        )
+//    }
+//}
+//
+//@Preview(
+//    uiMode = Configuration.UI_MODE_NIGHT_NO,
+//    showBackground = true
+//)
+//@Composable
+//fun GameSelectionScreenAllGamesPreview() {
+//    BoardGamesGaloreTheme {
+//        val games = getFakeGameList()
+//        GameSelectionScreen(
+//            searchText = "",
+//            gameList = games,
+//            onValueChange = {},
+//            onAddGameClicked = {},
+//            modifier = Modifier
+//        )
+//    }
+//}
+//
+//@Preview(showBackground = true, widthDp = 320, heightDp = 80)
+//@Composable
+//fun GameSearchItemPreview() {
+//    val date =
+//        Date.from(LocalDate.parse("2023-09-25").atStartOfDay(ZoneId.systemDefault()).toInstant())
+//    val gameImage = MediaStoreImage(1, "FakeImage", date, Uri.parse("FakeUri"))
+//    GameSearchItem(
+//        game = getFakeGame(),
+//        gameImage = gameImage,
+//        onGameClicked = {},
+//        modifier = Modifier.fillMaxWidth()
+//    )
+//}
 

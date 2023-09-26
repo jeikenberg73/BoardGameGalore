@@ -1,17 +1,16 @@
 package com.jeikenberg.boardgamesgalore.ui.utilscreens
 
-import android.content.Intent
+import android.app.AlertDialog
+import android.content.ContentResolver
+import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.ImageDecoder
 import android.net.Uri
-import android.provider.Settings
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -19,20 +18,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -48,13 +39,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.annotation.ExperimentalCoilApi
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
@@ -62,24 +49,21 @@ import com.bumptech.glide.integration.compose.GlideImage
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.jeikenberg.boardgamesgalore.R
 import com.jeikenberg.boardgamesgalore.data.game.Game
-import com.jeikenberg.boardgamesgalore.ui.theme.BlueGradiantBackgroundStart
-import com.jeikenberg.boardgamesgalore.ui.theme.BlueGradiantBackgroundStop
-import com.jeikenberg.boardgamesgalore.ui.theme.BoardGamesGaloreTheme
 import com.jeikenberg.boardgamesgalore.ui.theme.GreenColorStops
-import com.jeikenberg.boardgamesgalore.ui.theme.InterFontFamily
 import com.jeikenberg.boardgamesgalore.util.AlertDialogComponent
+import com.jeikenberg.boardgamesgalore.util.EmptyIconImage
+import com.jeikenberg.boardgamesgalore.util.GAME_DESCRIPTION
+import com.jeikenberg.boardgamesgalore.util.GAME_ICON_IMAGE_URI
+import com.jeikenberg.boardgamesgalore.util.GAME_MAKER
+import com.jeikenberg.boardgamesgalore.util.GAME_NAME
+import com.jeikenberg.boardgamesgalore.util.GAME_NUMBER_OF_PLAYERS
+import com.jeikenberg.boardgamesgalore.util.GAME_PLAY_TIME
+import com.jeikenberg.boardgamesgalore.util.GAME_RATING
+import com.jeikenberg.boardgamesgalore.util.GAME_WEIGHT
+import com.jeikenberg.boardgamesgalore.util.GameTextField
+import com.jeikenberg.boardgamesgalore.util.NULL_LITERAL
 import com.jeikenberg.boardgamesgalore.viewmodels.AddGameViewModel
 import kotlinx.coroutines.runBlocking
-
-const val GAME_NAME = "Game Name"
-const val GAME_MAKER = "Game Maker"
-const val GAME_RATING = "Game Rating"
-const val GAME_WEIGHT = "Game Weight"
-const val GAME_NUMBER_OF_PLAYERS = "Game Number Of Players"
-const val GAME_PLAY_TIME = "Game Play Time"
-const val GAME_DESCRIPTION = "Game Description"
-const val GAME_ICON_IMAGE_URI = "Game Icon Image URI"
-
 
 @ExperimentalPermissionsApi
 @ExperimentalCoilApi
@@ -89,12 +73,16 @@ const val GAME_ICON_IMAGE_URI = "Game Icon Image URI"
 )
 @Composable
 fun AddGameScreen(
+    game: Game? = null,
+    isInitialized: Boolean,
+    onInitializing: (Boolean) -> Unit,
     takePictureClick: () -> Unit,
     uploadPictureClick: () -> Unit,
     bitmap: Bitmap? = null,
     setHasTakenPicture: (Boolean) -> Unit,
     hasTakenPicture: Boolean = false,
     onGameSaved: () -> Unit,
+    onGameNotSaved: () -> Unit,
     onCancel: () -> Unit,
     onTakePictureFailed: (title: String, message: String) -> Unit,
     modifier: Modifier
@@ -139,9 +127,34 @@ fun AddGameScreen(
     var isUploadingImage: Boolean by rememberSaveable {
         mutableStateOf(true)
     }
+    var isEditing: Boolean by rememberSaveable {
+        mutableStateOf(false)
+    }
+    var oldName: String by rememberSaveable {
+        mutableStateOf("")
+    }
     val (focusRequester) = FocusRequester.createRefs()
     val keyboardController = LocalSoftwareKeyboardController.current
 
+    if (!isInitialized) {
+        game?.let { localGame ->
+            isEditing = true
+            oldName = localGame.name
+            gameName = localGame.name
+            gameMaker = localGame.maker
+            gameRating = localGame.rating.toString()
+            gameWeight = localGame.weight.toString()
+            gameNumberOfPlayers = localGame.numberOfPlayers
+            gamePlayTime = localGame.playTime
+            gameDescription = localGame.description
+            gameIconUri = Uri.parse(localGame.gameIconUri)
+            onInitializing(true)
+        } ?: run {
+            onInitializing(true)
+        }
+    }
+    val context = LocalContext.current
+    val contentResolver = context.contentResolver
     Scaffold(
         topBar = {
             val gameStats = mapOf(
@@ -154,7 +167,7 @@ fun AddGameScreen(
                 Pair(GAME_DESCRIPTION, gameDescription),
                 Pair(GAME_ICON_IMAGE_URI, gameIconUri.toString())
             )
-            TopBar(
+            AddEditTopBar(
                 title = titleValue,
                 message = messageValue,
                 onDismissRequest = {
@@ -163,23 +176,39 @@ fun AddGameScreen(
                 showDialog = showDialog,
                 saveButtonClick = {
                     val didSave = saveGame(
-                        gameStats[GAME_NAME]!!,
-                        gameStats[GAME_MAKER]!!,
-                        gameStats[GAME_RATING]!!,
-                        gameStats[GAME_WEIGHT]!!,
-                        gameStats[GAME_NUMBER_OF_PLAYERS]!!,
-                        gameStats[GAME_PLAY_TIME]!!,
-                        gameStats[GAME_DESCRIPTION]!!,
-                        gameStats[GAME_ICON_IMAGE_URI]!!,
+                        context = context,
+                        name = gameStats[GAME_NAME]!!,
+                        oldName = oldName,
+                        maker = gameStats[GAME_MAKER]!!,
+                        rating = gameStats[GAME_RATING]!!,
+                        weight = gameStats[GAME_WEIGHT]!!,
+                        numberOfPlayers = gameStats[GAME_NUMBER_OF_PLAYERS]!!,
+                        playTime = gameStats[GAME_PLAY_TIME]!!,
+                        description = gameStats[GAME_DESCRIPTION]!!,
+                        gameIcon = gameStats[GAME_ICON_IMAGE_URI]!!,
                         errorPopup = { title, message ->
                             showDialog = true
                             titleValue = title
                             messageValue = message
                         },
-                        viewModel
+                        isEditing = isEditing,
+                        viewModel = viewModel,
+                        onUpdateFail = {
+                            AlertDialogComponent(
+                                title = stringResource(R.string.add_edit_game_game_update_failed_title),
+                                message = stringResource(R.string.add_edit_game_game_update_failed_message),
+                                onDismissRequest = { this.dismiss() },
+                                showDialog = true,
+                                modifier = Modifier
+                            )
+                        },
+                        gameBeingEdited = game,
+                        contentResolver =  contentResolver
                     )
-                    if(didSave) {
+                    if (didSave) {
                         onGameSaved()
+                    } else { // Error is taken care of in the saveGame function.
+                        onGameNotSaved()
                     }
                 },
                 saveButtonEnable = saveButtonEnable,
@@ -214,7 +243,7 @@ fun AddGameScreen(
                         gameIconUri = gameIconUri.toString()
                     )
                 },
-                label = "Name",
+                label = stringResource(R.string.add_edit_game_field_name),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                 keyboardActions = KeyboardActions(
                     onNext = { focusRequester.requestFocus() }
@@ -240,7 +269,7 @@ fun AddGameScreen(
                         gameIconUri = gameIconUri.toString()
                     )
                 },
-                label = "Maker",
+                label = stringResource(R.string.add_edit_game_field_maker),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                 keyboardActions = KeyboardActions(
                     onNext = { focusRequester.requestFocus() }
@@ -266,7 +295,7 @@ fun AddGameScreen(
                         gameIconUri = gameIconUri.toString()
                     )
                 },
-                label = "Rating",
+                label = stringResource(R.string.add_edit_game_field_rating),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                 keyboardActions = KeyboardActions(
                     onNext = { focusRequester.requestFocus() }
@@ -292,7 +321,7 @@ fun AddGameScreen(
                         gameIconUri = gameIconUri.toString()
                     )
                 },
-                label = "Weight",
+                label = stringResource(R.string.add_edit_game_field_weight),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                 keyboardActions = KeyboardActions(
                     onNext = { focusRequester.requestFocus() }
@@ -318,7 +347,7 @@ fun AddGameScreen(
                         gameIconUri = gameIconUri.toString()
                     )
                 },
-                label = "Number Of Players (e.g. 1-4 or 2)",
+                label = stringResource(R.string.add_edit_game_field_number_players),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                 keyboardActions = KeyboardActions(
                     onNext = { focusRequester.requestFocus() }
@@ -344,7 +373,7 @@ fun AddGameScreen(
                         gameIconUri = gameIconUri.toString()
                     )
                 },
-                label = "Play Time (Min) (e.g. 60-120 or 30)",
+                label = stringResource(R.string.add_edit_game_field_play_time),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                 keyboardActions = KeyboardActions(
                     onNext = { focusRequester.requestFocus() }
@@ -370,7 +399,7 @@ fun AddGameScreen(
                         gameIconUri = gameIconUri.toString()
                     )
                 },
-                label = "Game Description",
+                label = stringResource(R.string.add_edit_game_field_description),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                 keyboardActions = KeyboardActions(
                     onDone = { keyboardController?.hide() }
@@ -383,7 +412,7 @@ fun AddGameScreen(
                     .padding(end = 8.dp)
             )
             Text(
-                text = "Game Icon Upload",
+                text = stringResource(R.string.add_edit_game_game_icon_uploaded),
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onPrimary,
                 modifier = modifier
@@ -410,7 +439,7 @@ fun AddGameScreen(
                         )
                 ) {
                     Text(
-                        text = "Upload Icon",
+                        text = stringResource(R.string.add_edit_game_upload_icon),
                         style = MaterialTheme.typography.bodyLarge
                     )
                 }
@@ -419,8 +448,8 @@ fun AddGameScreen(
                     onClick = {
                         if (gameName.isEmpty() || gameName.isBlank()) {
                             onTakePictureFailed(
-                                "No Game Name",
-                                "The game needs a name before taking a picture."
+                                context.getString(R.string.add_edit_game_no_game_name_title),
+                                context.getString(R.string.add_edit_game_no_game_name_message)
                             )
                         } else {
                             isUploadingImage = false
@@ -437,7 +466,7 @@ fun AddGameScreen(
                         )
                 ) {
                     Text(
-                        text = "Take Picture",
+                        text = stringResource(R.string.add_edit_game_take_picture),
                         style = MaterialTheme.typography.bodyLarge
                     )
                 }
@@ -513,9 +542,26 @@ fun AddGameScreen(
                         )
                     }
                 }
+            } else if (gameIconUri != null) {
+                if (isEditing) {
+                    GlideImage(
+                        model = Uri.parse(gameIconUri.toString()),
+                        contentDescription = null,
+                        contentScale = ContentScale.FillBounds,
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .align(Alignment.CenterHorizontally)
+                            .size(50.dp)
+                            .clip(CircleShape)
+                    )
+                }
             }
         }
     }
+}
+
+private fun getBitmapFromUri(imageUri: Uri, contentResolver: ContentResolver): Bitmap {
+    return ImageDecoder.decodeBitmap(ImageDecoder.createSource(contentResolver, imageUri))
 }
 
 private fun checkSaveButtonEnable(
@@ -528,161 +574,29 @@ private fun checkSaveButtonEnable(
     description: String,
     gameIconUri: String,
 ): Boolean {
-    val shouldShow =
-        !(name.isBlank() ||
-                name.isEmpty() ||
-                maker.isBlank() ||
-                maker.isEmpty() ||
-                rating.isBlank() ||
-                rating.isEmpty() ||
-                weight.isBlank() ||
-                weight.isEmpty() ||
-                numberOfPlayers.isBlank() ||
-                numberOfPlayers.isEmpty() ||
-                playTime.isBlank() ||
-                playTime.isEmpty() ||
-                description.isBlank() ||
-                description.isEmpty() ||
-                gameIconUri.isBlank() ||
-                gameIconUri.isEmpty() ||
-                gameIconUri == "null")
-
-    return shouldShow
+    return !(name.isBlank() ||
+            name.isEmpty() ||
+            maker.isBlank() ||
+            maker.isEmpty() ||
+            rating.isBlank() ||
+            rating.isEmpty() ||
+            weight.isBlank() ||
+            weight.isEmpty() ||
+            numberOfPlayers.isBlank() ||
+            numberOfPlayers.isEmpty() ||
+            playTime.isBlank() ||
+            playTime.isEmpty() ||
+            description.isBlank() ||
+            description.isEmpty() ||
+            gameIconUri.isBlank() ||
+            gameIconUri.isEmpty() ||
+            gameIconUri == NULL_LITERAL)
 }
 
-@Composable
-private fun EmptyIconImage(
-    modifier: Modifier
-) {
-    Image(
-        painter = painterResource(R.drawable.token),
-        contentDescription = null,
-        contentScale = ContentScale.Crop,
-        modifier = modifier
-    )
-}
-
-@Composable
-private fun PermissionRequestDialog(modifier: Modifier) {
-    val context = LocalContext.current
-    Column(modifier) {
-        Text("No Permission")
-        Spacer(modifier = Modifier.height(8.dp))
-        Button(
-            onClick = {
-                context.startActivity(
-                    Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-                        .apply {
-                            data = Uri.fromParts(
-                                "package",
-                                context.packageName,
-                                null
-                            )
-                        })
-            }) {
-            Text("Open Settings")
-        }
-    }
-}
-
-@Composable
-private fun Rational(
-    text: String,
-    onRequestPermission: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = { /* Don't */ },
-        title = {
-            Text(text = "Permission request")
-        },
-        text = {
-            Text(text)
-        },
-        confirmButton = {
-            Button(
-                onClick = onRequestPermission
-            ) {
-                Text("Ok")
-            }
-        }
-    )
-}
-
-@Composable
-fun TopBar(
-    title: String,
-    message: String,
-    onDismissRequest: () -> Unit,
-    showDialog: Boolean,
-    saveButtonClick: () -> Unit,
-    saveButtonEnable: Boolean,
-    onCancel: () -> Unit,
-    modifier: Modifier
-) {
-    val colorStops = arrayOf(
-        0.0f to BlueGradiantBackgroundStart,
-        1.0f to BlueGradiantBackgroundStop
-    )
-
-    Row(
-        modifier = modifier
-            .background(Brush.verticalGradient(colorStops = colorStops))
-    ) {
-        IconButton(
-            onClick = onCancel,
-            modifier = modifier
-                .align(Alignment.CenterVertically)
-                .padding(start = 16.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Default.ArrowBack,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = modifier
-                    .align(Alignment.CenterVertically)
-                    .padding(start = 16.dp)
-            )
-        }
-        Text(
-            text = "Add Game",
-            style = MaterialTheme.typography.displayMedium,
-            color = Color.White,
-            textAlign = TextAlign.Center,
-            modifier = modifier
-                .align(Alignment.CenterVertically)
-                .weight(1f)
-        )
-        TextButton(
-            onClick = saveButtonClick,
-            enabled = saveButtonEnable,
-            modifier = modifier
-                .align(Alignment.CenterVertically)
-        ) {
-            Text(
-                text = "Save",
-                color = Color.White,
-                fontFamily = InterFontFamily,
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
-                lineHeight = 24.sp,
-                textAlign = TextAlign.Center,
-                modifier = modifier
-                    .align(Alignment.CenterVertically)
-                    .padding(end = 8.dp)
-            )
-        }
-        AlertDialogComponent(
-            title = title,
-            message = message,
-            onDismissRequest = onDismissRequest,
-            showDialog = showDialog,
-            modifier = modifier
-        )
-    }
-}
-
-private fun saveGame (
+private fun saveGame(
+    context: Context,
     name: String,
+    oldName: String,
     maker: String,
     rating: String,
     weight: String,
@@ -691,174 +605,168 @@ private fun saveGame (
     description: String,
     gameIcon: String,
     errorPopup: (errorTitle: String, errorMessage: String) -> Unit,
-    viewModel: AddGameViewModel
+    viewModel: AddGameViewModel,
+    isEditing: Boolean,
+    onUpdateFail: @Composable AlertDialog.() -> Unit,
+    gameBeingEdited: Game? = null,
+    contentResolver: ContentResolver
 ): Boolean {
+    var didSave = true
     if (name.isEmpty() || name.isBlank()) {
-        errorPopup("Name Not Correct", "The game needs a correct name.")
-        return false
+        errorPopup(
+            context.getString(R.string.add_edit_game_name_not_correct_title),
+            context.getString(
+                R.string.add_edit_game_name_not_correct_message
+            )
+        )
+        didSave = false
+    } else if (maker.isEmpty() || maker.isBlank()) {
+        errorPopup(
+            context.getString(R.string.add_edit_game_maker_not_correct_title),
+            context.getString(
+                R.string.add_edit_game_maker_not_correct_message
+            )
+        )
+        didSave = false
+    } else if (rating.isEmpty() || rating.isBlank()) {
+        errorPopup(
+            context.getString(R.string.add_edit_game_rating_not_correct_title),
+            context.getString(
+                R.string.add_edit_game_rating_not_correct_message
+            )
+        )
+        didSave = false
+    } else if (weight.isEmpty() || weight.isBlank()) {
+        errorPopup(
+            context.getString(R.string.add_edit_game_weight_not_correct_title),
+            context.getString(
+                R.string.add_edit_game_weight_not_correct_message
+            )
+        )
+        didSave = false
+    } else if (numberOfPlayers.isEmpty() || numberOfPlayers.isBlank()) {
+        errorPopup(
+            context.getString(R.string.add_edit_game_number_of_players_not_correct_title),
+            context.getString(R.string.add_edit_game_number_of_players_not_correct_message)
+        )
+        didSave = false
+    } else if (playTime.isEmpty() || playTime.isBlank()) {
+        errorPopup(
+            context.getString(R.string.add_edit_game_play_time_not_correct_title),
+            context.getString(R.string.add_edit_game_play_time_not_correct_message)
+        )
+        didSave = false
+    } else if (description.isEmpty() || description.isBlank()) {
+        errorPopup(
+            context.getString(R.string.add_edit_game_description_not_correct_title),
+            context.getString(R.string.add_edit_game_description_not_correct_message)
+        )
+        didSave = false
     }
 
-    if (maker.isEmpty() || maker.isBlank()) {
-        errorPopup("Maker Not Correct", "The game needs a correct maker.")
-        return false
-    }
-
-    val ratingNumber =
-        if (rating.isEmpty() || rating.isBlank()) {
-            errorPopup("Rating Not Correct", "The game needs a correct rating.")
-            return false
-        } else {
+    if (didSave) {
+        val ratingNumber =
             rating.toDoubleOrNull() ?: run {
                 errorPopup(
-                    "Rating Not Correct",
-                    "Please check the rating and try again."
+                    context.getString(R.string.add_edit_game_rating_parsing_not_correct_title),
+                    context.getString(R.string.add_edit_game_rating_parsing_not_correct_message)
                 )
-                return false
+                didSave = false
+                0.0
             }
-        }
 
-    val weightNumber =
-        if (weight.isEmpty() || weight.isBlank()) {
-            errorPopup("Weight Not Correct", "The game needs a correct weight.")
-            return false
-        } else {
+        val weightNumber =
             weight.toDoubleOrNull() ?: run {
                 errorPopup(
-                    "Weight Not Correct",
-                    "Please check the weight and try again."
+                    context.getString(R.string.add_edit_game_weight_parsing_not_correct_title),
+                    context.getString(R.string.add_edit_game_weight_parsing_not_correct_message)
                 )
-                return false
+                didSave = false
+                0.0
             }
-        }
 
-    val numberOfPlayersValue = if (numberOfPlayers.isEmpty() || numberOfPlayers.isBlank()) {
-        errorPopup(
-            "Number Of Players Not Correct",
-            "The game needs a number of players"
-        )
-        return false
-    } else {
-        val regex = Regex(
+        var regex = Regex(
             pattern = "^[0-9]+(-[0-9]+)",
             options = setOf(RegexOption.IGNORE_CASE)
         )
-        if (regex.matches(numberOfPlayers.trim())) {
-            numberOfPlayers
-        } else {
-            errorPopup(
-                "Number Of Players Not Correct",
-                "Please check the number of players. It needs to use the format X-Y where X is the least amount of players and Y is the most amount of players (e.g. 1-4)."
-            )
-            return false
-        }
-    }
+        val numberOfPlayersValue =
+            if (regex.matches(numberOfPlayers.trim())) {
+                numberOfPlayers
+            } else {
+                errorPopup(
+                    context.getString(R.string.add_edit_game_number_of_players_parsing_not_correct_title),
+                    context.getString(R.string.add_edit_game_number_of_players_parsing_not_correct_message)
+                )
+                didSave = false
+                ""
+            }
 
-    val playTimeValue = if (playTime.isEmpty() || playTime.isBlank()) {
-        errorPopup(
-            "Play Time Not Correct",
-            "The game needs an amount of play time."
-        )
-        return false
-    } else {
-        val regex = Regex(
+
+        regex = Regex(
             pattern = "^[0-9]+(-*[0-9]*)",
             options = setOf(RegexOption.IGNORE_CASE)
         )
-        if (regex.matches(playTime.trim())) {
-            playTime
-        } else {
-            errorPopup(
-                "Play Time Not Correct",
-                "Please check the play time. It needs to use the format X-Y where X it the shortest play time in minutes and Y is the longest play time in minutes (e.g. 60-120)"
-            )
-            return false
+        val playTimeValue =
+            if (regex.matches(playTime.trim())) {
+                playTime
+            } else {
+                errorPopup(
+                    context.getString(R.string.add_edit_game_play_time_parsing_not_correct_title),
+                    context.getString(R.string.add_edit_game_play_time_parsing_not_correct_message)
+                )
+                didSave = false
+                ""
+            }
+
+        val gameIconValue =
+            if(isEditing && oldName.isNotBlank() && oldName.isNotEmpty() && oldName != name) {
+                val gameUri = Uri.parse(gameIcon)
+                val bitmap = getBitmapFromUri(gameUri, contentResolver)
+                viewModel.deleteImage(contentResolver, gameUri)
+                viewModel.saveImage(
+                    contentResolver,
+                    name,
+                    bitmap
+                ).toString()
+            } else {
+                gameIcon
+            }
+
+        if (didSave) {
+            runBlocking {
+                if (isEditing) {
+                    gameBeingEdited?.let { game ->
+                        game.name = name
+                        game.maker = maker
+                        game.rating = rating.toDouble()
+                        game.weight = weight.toDouble()
+                        game.numberOfPlayers = numberOfPlayers
+                        game.playTime = playTime
+                        game.description = description
+                        game.gameIconUri = gameIconValue
+
+                        viewModel.updateGame(game)
+                    } ?: run {
+                        onUpdateFail
+                    }
+                } else {
+                    val game = Game(
+                        name,
+                        maker,
+                        ratingNumber,
+                        weightNumber,
+                        numberOfPlayersValue,
+                        playTimeValue,
+                        description,
+                        gameIconValue
+                    )
+                    viewModel.insertGame(game)
+                }
+            }
         }
     }
 
-    if (description.isEmpty() || description.isBlank()) {
-        errorPopup(
-            "Description Not Correct",
-            "The game needs a description."
-        )
-        return false
-    }
-
-    val game = Game(
-        name,
-        maker,
-        ratingNumber,
-        weightNumber,
-        numberOfPlayersValue,
-        playTimeValue,
-        description,
-        gameIcon
-    )
-    runBlocking {
-        viewModel.insertGame(game)
-    }
-
-    return true
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun GameTextField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    label: String,
-    singleLine: Boolean = true,
-    maxLines: Int = 1,
-    keyboardOptions: KeyboardOptions,
-    keyboardActions: KeyboardActions,
-    modifier: Modifier
-) {
-    TextField(
-        modifier = modifier
-            .background(
-                brush = Brush.verticalGradient(colorStops = GreenColorStops),
-                shape = RoundedCornerShape(8.dp)
-            )
-            .fillMaxWidth(),
-        textStyle = MaterialTheme.typography.titleLarge,
-        colors = TextFieldDefaults.textFieldColors(
-            textColor = MaterialTheme.colorScheme.onSecondary,
-            containerColor = Color.Transparent,
-            focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent
-        ),
-        singleLine = singleLine,
-        maxLines = maxLines,
-        value = value,
-        onValueChange = onValueChange,
-        placeholder = {
-            Text(
-                text = label,
-                textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = modifier
-            )
-        },
-        keyboardOptions = keyboardOptions,
-        keyboardActions = keyboardActions
-    )
-}
-
-@Preview(showBackground = true, widthDp = 380, heightDp = 80)
-@Composable
-fun TopBarPreview() {
-    BoardGamesGaloreTheme {
-        TopBar(
-            title = "Error",
-            message = "Error Message",
-            onDismissRequest = {},
-            showDialog = false,
-            saveButtonClick = {},
-            saveButtonEnable = true,
-            onCancel = {},
-            modifier = Modifier
-        )
-    }
+    return didSave
 }
 
 //@Preview(showBackground = false)

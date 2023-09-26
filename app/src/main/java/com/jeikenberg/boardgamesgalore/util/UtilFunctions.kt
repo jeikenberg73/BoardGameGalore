@@ -16,6 +16,7 @@ fun checkUri(context: Context, uri: String): Boolean {
         inputStr = context.contentResolver.openInputStream(Uri.parse(uri))
     } catch (e: Exception) {
         Log.d("TAG", "Exception $e")
+        return false
     }
 
     val exists = inputStr != null
