@@ -1,6 +1,5 @@
 package com.jeikenberg.boardgamesgalore.ui.gameselection
 
-import android.content.res.Configuration
 import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -41,7 +40,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -49,16 +47,12 @@ import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.jeikenberg.boardgamesgalore.R
 import com.jeikenberg.boardgamesgalore.data.game.Game
-import com.jeikenberg.boardgamesgalore.ui.theme.BoardGamesGaloreTheme
 import com.jeikenberg.boardgamesgalore.ui.theme.GreenGradiantBackgroundStart
 import com.jeikenberg.boardgamesgalore.ui.theme.GreenGradiantBackgroundStop
-import com.jeikenberg.boardgamesgalore.ui.utilscreens.TopSearchBar
+import com.jeikenberg.boardgamesgalore.util.TopSearchBar
 import com.jeikenberg.boardgamesgalore.util.MediaStoreImage
 import com.jeikenberg.boardgamesgalore.util.checkUri
 import com.jeikenberg.boardgamesgalore.viewmodels.GameSelectionViewModel
-import java.time.LocalDate
-import java.time.ZoneId
-import java.util.Date
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -244,86 +238,86 @@ fun GameSearchItem(
         }
     }
 }
-
-fun getFakeGame(): Game {
-    return Game(
-        "GloomHaven",
-        "GloomTeam",
-        8.6,
-        3.6,
-        "1-4",
-        "60-120",
-        "Fun campaign game.",
-        "content://media/external/images/media/31"
-    )
-}
-
-fun getFakeGameList(): List<Game> {
-    val games = ArrayList<Game>()
-
-    val game1 = Game(
-        "GloomHaven",
-        "GloomTeam",
-        8.6,
-        3.6,
-        "1-4",
-        "60-120",
-        "Fun campaign game.",
-        "content://media/external/images/media/31"
-    )
-
-    val game2 = Game(
-        "Terraforming Mars",
-        "FryxGames",
-        8.4,
-        3.26,
-        "1-5",
-        "120",
-        "Work to terraform mars.",
-        "content://media/external/images/media/31"
-    )
-
-    val game3 = Game(
-        "Dominion",
-        "Rio Grande Games",
-        7.6,
-        2.35,
-        "2-4",
-        "30",
-        "Deck building game.",
-        "content://media/external/images/media/31"
-    )
-
-    val game4 = Game(
-        "Catan",
-        "KOSMOS",
-        7.1,
-        2.3,
-        "3-4",
-        "60-120",
-        "Trade and build cities.",
-        "content://media/external/images/media/31"
-    )
-
-    val game5 = Game(
-        "Beyond the Sun",
-        "Rio Grande Games",
-        8.0,
-        3.12,
-        "2-4",
-        "60-120",
-        "Tech tree and planet colonization.",
-        "content://media/external/images/media/31"
-    )
-
-    games.add(game1)
-    games.add(game2)
-    games.add(game3)
-    games.add(game4)
-    games.add(game5)
-
-    return games
-}
+//
+//fun getFakeGame(): Game {
+//    return Game(
+//        "GloomHaven",
+//        "GloomTeam",
+//        8.6,
+//        3.6,
+//        "1-4",
+//        "60-120",
+//        "Fun campaign game.",
+//        "content://media/external/images/media/31"
+//    )
+//}
+//
+//fun getFakeGameList(): List<Game> {
+//    val games = ArrayList<Game>()
+//
+//    val game1 = Game(
+//        "GloomHaven",
+//        "GloomTeam",
+//        8.6,
+//        3.6,
+//        "1-4",
+//        "60-120",
+//        "Fun campaign game.",
+//        "content://media/external/images/media/31"
+//    )
+//
+//    val game2 = Game(
+//        "Terraforming Mars",
+//        "FryxGames",
+//        8.4,
+//        3.26,
+//        "1-5",
+//        "120",
+//        "Work to terraform mars.",
+//        "content://media/external/images/media/31"
+//    )
+//
+//    val game3 = Game(
+//        "Dominion",
+//        "Rio Grande Games",
+//        7.6,
+//        2.35,
+//        "2-4",
+//        "30",
+//        "Deck building game.",
+//        "content://media/external/images/media/31"
+//    )
+//
+//    val game4 = Game(
+//        "Catan",
+//        "KOSMOS",
+//        7.1,
+//        2.3,
+//        "3-4",
+//        "60-120",
+//        "Trade and build cities.",
+//        "content://media/external/images/media/31"
+//    )
+//
+//    val game5 = Game(
+//        "Beyond the Sun",
+//        "Rio Grande Games",
+//        8.0,
+//        3.12,
+//        "2-4",
+//        "60-120",
+//        "Tech tree and planet colonization.",
+//        "content://media/external/images/media/31"
+//    )
+//
+//    games.add(game1)
+//    games.add(game2)
+//    games.add(game3)
+//    games.add(game4)
+//    games.add(game5)
+//
+//    return games
+//}
 
 //@Preview(
 //    uiMode = Configuration.UI_MODE_NIGHT_NO,

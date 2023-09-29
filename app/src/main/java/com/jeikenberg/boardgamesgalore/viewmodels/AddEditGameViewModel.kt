@@ -10,21 +10,27 @@ import com.jeikenberg.boardgamesgalore.data.ImagePersistenceRepository
 import com.jeikenberg.boardgamesgalore.data.game.Game
 import com.jeikenberg.boardgamesgalore.data.game.GameRepository
 import com.jeikenberg.boardgamesgalore.util.MediaStoreImage
+import com.jeikenberg.boardgamesgalore.util.WHILE_SUBSCRIBE_TIMEOUT_MILLS
 import com.mr0xf00.easycrop.ImageCropper
 import com.mr0xf00.easycrop.crop
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class AddGameViewModel @Inject constructor(
+class AddEditGameViewModel @Inject constructor(
     private val gameRepository: GameRepository,
     private val imagePersistenceRepository: ImagePersistenceRepository,
     private val app: Application
 ) : AndroidViewModel(app) {
 
-    val imageCropper = ImageCropper()
+    private val imageCropper = ImageCropper()
 
     suspend fun insertGame(game: Game) {
         CoroutineScope(viewModelScope.coroutineContext).launch {
@@ -42,24 +48,24 @@ class AddGameViewModel @Inject constructor(
         return imagePersistenceRepository.saveImage(contentResolver, fileName, bitmap)
     }
 
-    fun deleteImage(contentResolver: ContentResolver, imageUri: Uri) {
-        imagePersistenceRepository.removeImage(contentResolver, imageUri)
+    fun deleteImage(contentResolver: ContentResolver/*, imageName: String*/, imageUri: Uri): Boolean {
+        return imagePersistenceRepository.removeImage(contentResolver/*, imageName*/, imageUri)
     }
 
     fun getImageByGame(contentResolver: ContentResolver, game: Game): MediaStoreImage? {
         return imagePersistenceRepository.retrieveImage(
             contentResolver,
-            game.name,
+            game.gameId,
             game.gameIconUri
         )
     }
 
     fun getImageByName(
         contentResolver: ContentResolver,
-        gameName: String,
+        gameId: Long,
         gameIconUri: String
     ): MediaStoreImage? {
-        return imagePersistenceRepository.retrieveImage(contentResolver, gameName, gameIconUri)
+        return imagePersistenceRepository.retrieveImage(contentResolver, gameId, gameIconUri)
     }
 
     fun setSelectedImage(uri: Uri) {

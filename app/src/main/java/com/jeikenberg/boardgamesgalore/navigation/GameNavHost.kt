@@ -24,13 +24,13 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.jeikenberg.boardgamesgalore.data.game.Game
 import com.jeikenberg.boardgamesgalore.ui.gamedetails.GameInfoScreen
 import com.jeikenberg.boardgamesgalore.ui.gameselection.GameSelectionScreen
-import com.jeikenberg.boardgamesgalore.ui.utilscreens.AddGameScreen
-import com.jeikenberg.boardgamesgalore.ui.utilscreens.TakePicture
-import com.jeikenberg.boardgamesgalore.ui.utilscreens.UploadImageCompose
+import com.jeikenberg.boardgamesgalore.ui.addedit.AddGameScreen
+import com.jeikenberg.boardgamesgalore.ui.addedit.TakePicture
+import com.jeikenberg.boardgamesgalore.ui.addedit.UploadImageCompose
 import com.jeikenberg.boardgamesgalore.util.AlertDialogComponent
 import com.jeikenberg.boardgamesgalore.util.navigateSingleTopTo
 import com.jeikenberg.boardgamesgalore.util.navigateToDetails
-import com.jeikenberg.boardgamesgalore.viewmodels.AddGameViewModel
+import com.jeikenberg.boardgamesgalore.viewmodels.AddEditGameViewModel
 import com.jeikenberg.boardgamesgalore.viewmodels.GameSelectionViewModel
 import com.mr0xf00.easycrop.rememberImageCropper
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -44,7 +44,7 @@ fun GameNavHost(
     navController: NavHostController = rememberNavController()
 ) {
     val gameSelectionViewModel: GameSelectionViewModel = hiltViewModel()
-    val addGameViewModel: AddGameViewModel = hiltViewModel()
+    val addEditGameViewModel: AddEditGameViewModel = hiltViewModel()
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
     var bitmap by remember { mutableStateOf<Bitmap?>(null) }
@@ -65,11 +65,8 @@ fun GameNavHost(
     var alertDialogMessage: String by remember {
         mutableStateOf("")
     }
-    var gameToEdit: Game? by rememberSaveable {
+    var game: Game? by rememberSaveable {
         mutableStateOf(null)
-    }
-    var isAddEditGameInitialized: Boolean by rememberSaveable {
-        mutableStateOf(false)
     }
     NavHost(
         navController = navController,
@@ -83,29 +80,29 @@ fun GameNavHost(
             val searchedGames by gameSelectionViewModel.searchedGames.collectAsState()
             val searchText by gameSelectionViewModel.searchText.collectAsState()
             val isSearching by gameSelectionViewModel.isSearching.collectAsState()
-            isAddEditGameInitialized = false
             GameSelectionScreen(
                 searchText = searchText,
                 gameList = searchedGames,
                 isSearching = isSearching,
                 onValueChange = gameSelectionViewModel::onSearchTextChange,
                 onAddGameClicked = {
-                    gameToEdit = null
+                    game = null
                     navController.navigateSingleTopTo(AddGame.route)
                 },
-                onEditGameClicked = { game ->
-                    gameToEdit = game
+                onEditGameClicked = { updatedGame ->
+                    game = updatedGame
                     navController.navigateSingleTopTo(AddGame.route)
                 },
                 modifier = modifier
             )
         }
         composable(route = AddGame.route) {
+            val games by gameSelectionViewModel.searchedGames.collectAsState()
             AddGameScreen(
-                game = gameToEdit,
-                isInitialized = isAddEditGameInitialized,
-                onInitializing = { isInitialized ->
-                    isAddEditGameInitialized = isInitialized
+                existingGame = game,
+                games = games,
+                updateGame = {updatedGame ->
+                             game = updatedGame
                 },
                 takePictureClick = {
                     navController.navigate(TakePicture.route)
@@ -129,7 +126,6 @@ fun GameNavHost(
                     navController.navigate(GameList.route)
                 },
                 onCancel = {
-                    isAddEditGameInitialized = false
                     navController.navigate(GameList.route)
                 },
                 onTakePictureFailed = { title, message ->
@@ -149,6 +145,17 @@ fun GameNavHost(
                 },
                 onPictureCancel = {
                     hasTakenPicture = false
+                    navController.popBackStack()
+                },
+                modifier = modifier
+            )
+        }
+        composable(
+                route = UploadImage.route
+                ) {
+            UploadImageCompose(
+                onImageChosen = { localBitmap ->
+                    bitmap = localBitmap
                     navController.popBackStack()
                 },
                 modifier = modifier
@@ -182,17 +189,7 @@ fun GameNavHost(
                 modifier = modifier
             )
         }
-        composable(
-            route = UploadImage.route
-        ) {
-            UploadImageCompose(
-                onImageChosen = { localBitmap ->
-                    bitmap = localBitmap
-                    navController.popBackStack()
-                },
-                modifier = modifier
-            )
-        }
+
     }
     AlertDialogComponent(
         title = alertDialogTitle,

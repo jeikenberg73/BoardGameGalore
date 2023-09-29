@@ -1,4 +1,4 @@
-package com.jeikenberg.boardgamesgalore.ui.utilscreens
+package com.jeikenberg.boardgamesgalore.util
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Row
@@ -27,8 +27,6 @@ import com.jeikenberg.boardgamesgalore.ui.theme.BlueGradiantBackgroundStart
 import com.jeikenberg.boardgamesgalore.ui.theme.BlueGradiantBackgroundStop
 import com.jeikenberg.boardgamesgalore.ui.theme.BoardGamesGaloreTheme
 import com.jeikenberg.boardgamesgalore.ui.theme.InterFontFamily
-import com.jeikenberg.boardgamesgalore.util.AlertDialogComponent
-
 
 
 @Composable
@@ -51,6 +49,7 @@ fun TopSearchBar(
 fun AddEditTopBar(
     title: String,
     message: String,
+    onNotInitialize: (Boolean) -> Unit,
     onDismissRequest: () -> Unit,
     showDialog: Boolean,
     saveButtonClick: () -> Unit,
@@ -68,7 +67,10 @@ fun AddEditTopBar(
             .background(Brush.verticalGradient(colorStops = colorStops))
     ) {
         IconButton(
-            onClick = onCancel,
+            onClick = {
+                onNotInitialize(false)
+                onCancel()
+            },
             modifier = modifier
                 .align(Alignment.CenterVertically)
                 .padding(start = 16.dp)
@@ -122,19 +124,19 @@ fun AddEditTopBar(
 
 
 
-@Preview(showBackground = true, widthDp = 380, heightDp = 80)
-@Composable
-private fun TopBarPreview() {
-    BoardGamesGaloreTheme {
-        AddEditTopBar(
-            title = stringResource(R.string.error),
-            message = stringResource(R.string.error_message),
-            onDismissRequest = {},
-            showDialog = false,
-            saveButtonClick = {},
-            saveButtonEnable = true,
-            onCancel = {},
-            modifier = Modifier
-        )
-    }
-}
+//@Preview(showBackground = true, widthDp = 380, heightDp = 80)
+//@Composable
+//private fun TopBarPreview() {
+//    BoardGamesGaloreTheme {
+//        AddEditTopBar(
+//            title = stringResource(R.string.error),
+//            message = stringResource(R.string.error_message),
+//            onDismissRequest = {},
+//            showDialog = false,
+//            saveButtonClick = {},
+//            saveButtonEnable = true,
+//            onCancel = {},
+//            modifier = Modifier
+//        )
+//    }
+//}

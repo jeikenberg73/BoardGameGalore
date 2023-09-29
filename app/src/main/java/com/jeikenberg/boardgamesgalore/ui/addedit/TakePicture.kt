@@ -1,4 +1,4 @@
-package com.jeikenberg.boardgamesgalore.ui.utilscreens
+package com.jeikenberg.boardgamesgalore.ui.addedit
 
 import android.Manifest
 import android.content.Intent
@@ -49,7 +49,6 @@ import com.mr0xf00.easycrop.CropError
 import com.mr0xf00.easycrop.CropResult
 import com.mr0xf00.easycrop.ImageCropper
 import com.mr0xf00.easycrop.crop
-import com.mr0xf00.easycrop.rememberImageCropper
 import com.mr0xf00.easycrop.ui.ImageCropperDialog
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch

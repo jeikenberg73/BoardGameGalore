@@ -3,13 +3,12 @@ package com.jeikenberg.boardgamesgalore.data
 import android.content.ContentResolver
 import android.content.ContentUris
 import android.content.ContentValues
-import android.database.Cursor
 import android.graphics.Bitmap
 import android.net.Uri
+import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
 import android.provider.MediaStore.Images
-import androidx.core.net.toFile
 import com.jeikenberg.boardgamesgalore.util.GAME_SAVE_DIRECTORY
 import com.jeikenberg.boardgamesgalore.util.MediaStoreImage
 import java.io.File
@@ -66,15 +65,28 @@ class ImagePersistenceRepository {
 
     fun removeImage(
         @Nonnull contentResolver: ContentResolver,
+//        @Nonnull imageName: String,
         @Nonnull imageUri: Uri
-    ) {
-        contentResolver.delete(imageUri, null)
-//        imageUri.toFile().delete()
+    ): Boolean {
+        val file: File? = imageUri.path?.let { File(it) }
+        val where: String?
+        val filesUri: Uri? = Images.Media.EXTERNAL_CONTENT_URI
+            where = Images.Media._ID + "=?"
+        val selectionArgs = arrayOf(file?.name)
+
+        filesUri?.let { uri ->
+            contentResolver.delete(uri, where, selectionArgs)
+            file?.exists()?.let {
+                return it
+            }
+        } ?: run {
+            return false
+        }
     }
 
     fun retrieveImage(
         @Nonnull contentResolver: ContentResolver,
-        @Nonnull gameName: String,
+        @Nonnull gameId: Long,
         @Nonnull gameIconUri: String,
     ): MediaStoreImage? {
         var image: MediaStoreImage? = null
@@ -86,7 +98,7 @@ class ImagePersistenceRepository {
         )
 
         val selection = "${Images.Media.DISPLAY_NAME} = ?"
-        val selectionArgs = arrayOf("$gameName.jpg")
+        val selectionArgs = arrayOf("$gameId.jpg")
 
         contentResolver.query(
             Uri.parse(Uri.decode(gameIconUri)),

@@ -8,7 +8,7 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
-import com.jeikenberg.boardgamesgalore.ui.utilscreens.TAG
+import com.jeikenberg.boardgamesgalore.ui.addedit.TAG
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File

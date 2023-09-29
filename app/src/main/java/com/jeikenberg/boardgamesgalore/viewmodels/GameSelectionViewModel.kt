@@ -9,6 +9,7 @@ import com.jeikenberg.boardgamesgalore.data.ImagePersistenceRepository
 import com.jeikenberg.boardgamesgalore.data.game.Game
 import com.jeikenberg.boardgamesgalore.data.game.GameRepository
 import com.jeikenberg.boardgamesgalore.util.MediaStoreImage
+import com.jeikenberg.boardgamesgalore.util.WHILE_SUBSCRIBE_TIMEOUT_MILLS
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.FlowPreview
@@ -32,16 +33,14 @@ class GameSelectionViewModel @Inject constructor(
     private val imagePersistenceRepository: ImagePersistenceRepository
 ) : ViewModel() {
 
-    companion object {
-        private const val TIMEOUT_MILLS = 5000L
-    }
-
     val gameUiState: StateFlow<GameUiState> =
         gameRepository.getGamesStream()
-            .map { GameUiState(it) }
+            .map {
+                GameUiState(it)
+            }
             .stateIn(
                 scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(TIMEOUT_MILLS),
+                started = SharingStarted.WhileSubscribed(WHILE_SUBSCRIBE_TIMEOUT_MILLS),
                 initialValue = GameUiState()
             )
 
@@ -78,12 +77,14 @@ class GameSelectionViewModel @Inject constructor(
     }
 
     fun getImageByGame(contentResolver: ContentResolver, game: Game): MediaStoreImage? {
-       return imagePersistenceRepository.retrieveImage(contentResolver, game.name, game.gameIconUri)
+       return imagePersistenceRepository.retrieveImage(contentResolver, game.gameId, game.gameIconUri)
     }
 
-    fun getImageByName(contentResolver: ContentResolver, gameName: String, gameIconUri: String): MediaStoreImage? {
-        return imagePersistenceRepository.retrieveImage(contentResolver, gameName, gameIconUri)
+    fun getImageById(contentResolver: ContentResolver, gameId: Long, gameIconUri: String): MediaStoreImage? {
+        return imagePersistenceRepository.retrieveImage(contentResolver, gameId, gameIconUri)
     }
 }
 
 data class GameUiState(val games: List<Game> = listOf())
+
+data class GameIdState(val ids: List<Long> = listOf())

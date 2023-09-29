@@ -19,3 +19,4 @@ const val GAME_ICON_IMAGE_URI = "Game Icon Image URI"
 
 const val NULL_LITERAL = "null"
 const val PACKAGE_LITERAL = "package"
+const val WHILE_SUBSCRIBE_TIMEOUT_MILLS = 5000L

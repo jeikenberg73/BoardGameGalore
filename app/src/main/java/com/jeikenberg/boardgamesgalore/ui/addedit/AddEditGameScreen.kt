@@ -1,4 +1,4 @@
-package com.jeikenberg.boardgamesgalore.ui.utilscreens
+package com.jeikenberg.boardgamesgalore.ui.addedit
 
 import android.app.AlertDialog
 import android.content.ContentResolver
@@ -26,6 +26,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -50,6 +51,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.jeikenberg.boardgamesgalore.R
 import com.jeikenberg.boardgamesgalore.data.game.Game
 import com.jeikenberg.boardgamesgalore.ui.theme.GreenColorStops
+import com.jeikenberg.boardgamesgalore.util.AddEditTopBar
 import com.jeikenberg.boardgamesgalore.util.AlertDialogComponent
 import com.jeikenberg.boardgamesgalore.util.EmptyIconImage
 import com.jeikenberg.boardgamesgalore.util.GAME_DESCRIPTION
@@ -61,9 +63,9 @@ import com.jeikenberg.boardgamesgalore.util.GAME_PLAY_TIME
 import com.jeikenberg.boardgamesgalore.util.GAME_RATING
 import com.jeikenberg.boardgamesgalore.util.GAME_WEIGHT
 import com.jeikenberg.boardgamesgalore.util.GameTextField
-import com.jeikenberg.boardgamesgalore.util.NULL_LITERAL
-import com.jeikenberg.boardgamesgalore.viewmodels.AddGameViewModel
+import com.jeikenberg.boardgamesgalore.viewmodels.AddEditGameViewModel
 import kotlinx.coroutines.runBlocking
+import java.util.Collections.max
 
 @ExperimentalPermissionsApi
 @ExperimentalCoilApi
@@ -73,9 +75,9 @@ import kotlinx.coroutines.runBlocking
 )
 @Composable
 fun AddGameScreen(
-    game: Game? = null,
-    isInitialized: Boolean,
-    onInitializing: (Boolean) -> Unit,
+    existingGame: Game? = null,
+    games: List<Game>,
+    updateGame: (Game) -> Unit,
     takePictureClick: () -> Unit,
     uploadPictureClick: () -> Unit,
     bitmap: Bitmap? = null,
@@ -87,7 +89,7 @@ fun AddGameScreen(
     onTakePictureFailed: (title: String, message: String) -> Unit,
     modifier: Modifier
 ) {
-    val viewModel: AddGameViewModel = hiltViewModel()
+    val viewModel: AddEditGameViewModel = hiltViewModel()
     var gameName: String by rememberSaveable {
         mutableStateOf("")
     }
@@ -128,45 +130,104 @@ fun AddGameScreen(
         mutableStateOf(true)
     }
     var isEditing: Boolean by rememberSaveable {
+        mutableStateOf(true)
+    }
+    var createdNewGame: Boolean by rememberSaveable {
         mutableStateOf(false)
     }
     var oldName: String by rememberSaveable {
         mutableStateOf("")
     }
+//    var game: Game? by rememberSaveable {
+//        mutableStateOf(null)
+//    }
+    var hasInitializedGame: Boolean by rememberSaveable {
+        mutableStateOf(false)
+    }
+
+    var gameId: Long by rememberSaveable {
+        mutableLongStateOf(-1)
+    }
     val (focusRequester) = FocusRequester.createRefs()
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    if (!isInitialized) {
-        game?.let { localGame ->
-            isEditing = true
-            oldName = localGame.name
-            gameName = localGame.name
-            gameMaker = localGame.maker
-            gameRating = localGame.rating.toString()
-            gameWeight = localGame.weight.toString()
-            gameNumberOfPlayers = localGame.numberOfPlayers
-            gamePlayTime = localGame.playTime
-            gameDescription = localGame.description
-            gameIconUri = Uri.parse(localGame.gameIconUri)
-            onInitializing(true)
-        } ?: run {
-            onInitializing(true)
+    if (existingGame == null) {
+        if(games.isEmpty()) {
+            return
         }
+        var largestLong = 0L
+        games.forEach { nextGame ->
+            if(nextGame.gameId > largestLong) {
+                largestLong = nextGame.gameId
+            }
+        }
+
+        val game = Game(
+            largestLong + 1,
+            "",
+            "",
+            0.0,
+            0.0,
+            "",
+            "",
+            "",
+            ""
+        )
+        updateGame(game)
+        createdNewGame = true
+        isEditing = false
+    } else {
+        gameId = existingGame.gameId
+        createdNewGame = false
+    }
+
+//    if (!hasInitializedGame && game == null) {
+//        game = Game(
+//            "",
+//            "",
+//            0.0,
+//            0.0,
+//            "",
+//            "",
+//            "",
+//            ""
+//        )
+//        hasInitializedGame = true
+//    } else {
+//        if (game != null) {
+//            game = existingGame
+//            game?.let { localGame ->
+//                isEditing = true
+//                oldName = localGame.name
+//                gameName = localGame.name
+//                gameMaker = localGame.maker
+//                gameRating = localGame.rating.toString()
+//                gameWeight = localGame.weight.toString()
+//                gameNumberOfPlayers = localGame.numberOfPlayers
+//                gamePlayTime = localGame.playTime
+//                gameDescription = localGame.description
+//                gameIconUri = Uri.parse(localGame.gameIconUri)
+//            }
+//        }
+//    }
+
+    if (createdNewGame) {
+        return
     }
     val context = LocalContext.current
     val contentResolver = context.contentResolver
+    val gameStats = mapOf(
+        Pair(GAME_NAME, gameName),
+        Pair(GAME_MAKER, gameMaker),
+        Pair(GAME_RATING, gameRating),
+        Pair(GAME_WEIGHT, gameWeight),
+        Pair(GAME_NUMBER_OF_PLAYERS, gameNumberOfPlayers),
+        Pair(GAME_PLAY_TIME, gamePlayTime),
+        Pair(GAME_DESCRIPTION, gameDescription),
+        Pair(GAME_ICON_IMAGE_URI, gameIconUri.toString())
+    )
     Scaffold(
         topBar = {
-            val gameStats = mapOf(
-                Pair(GAME_NAME, gameName),
-                Pair(GAME_MAKER, gameMaker),
-                Pair(GAME_RATING, gameRating),
-                Pair(GAME_WEIGHT, gameWeight),
-                Pair(GAME_NUMBER_OF_PLAYERS, gameNumberOfPlayers),
-                Pair(GAME_PLAY_TIME, gamePlayTime),
-                Pair(GAME_DESCRIPTION, gameDescription),
-                Pair(GAME_ICON_IMAGE_URI, gameIconUri.toString())
-            )
             AddEditTopBar(
                 title = titleValue,
                 message = messageValue,
@@ -177,6 +238,7 @@ fun AddGameScreen(
                 saveButtonClick = {
                     val didSave = saveGame(
                         context = context,
+                        id = gameId,
                         name = gameStats[GAME_NAME]!!,
                         oldName = oldName,
                         maker = gameStats[GAME_MAKER]!!,
@@ -202,8 +264,8 @@ fun AddGameScreen(
                                 modifier = Modifier
                             )
                         },
-                        gameBeingEdited = game,
-                        contentResolver =  contentResolver
+                        gameBeingEdited = existingGame!!,
+                        contentResolver = contentResolver
                     )
                     if (didSave) {
                         onGameSaved()
@@ -212,6 +274,9 @@ fun AddGameScreen(
                     }
                 },
                 saveButtonEnable = saveButtonEnable,
+                onNotInitialize = {
+                    hasInitializedGame = it
+                },
                 onCancel = onCancel,
                 modifier = modifier
             )
@@ -240,7 +305,7 @@ fun AddGameScreen(
                         numberOfPlayers = gameNumberOfPlayers,
                         playTime = gamePlayTime,
                         description = gameDescription,
-                        gameIconUri = gameIconUri.toString()
+//                        gameIconUri = gameIconUri.toString()
                     )
                 },
                 label = stringResource(R.string.add_edit_game_field_name),
@@ -266,7 +331,7 @@ fun AddGameScreen(
                         numberOfPlayers = gameNumberOfPlayers,
                         playTime = gamePlayTime,
                         description = gameDescription,
-                        gameIconUri = gameIconUri.toString()
+//                        gameIconUri = gameIconUri.toString()
                     )
                 },
                 label = stringResource(R.string.add_edit_game_field_maker),
@@ -292,7 +357,7 @@ fun AddGameScreen(
                         numberOfPlayers = gameNumberOfPlayers,
                         playTime = gamePlayTime,
                         description = gameDescription,
-                        gameIconUri = gameIconUri.toString()
+//                        gameIconUri = gameIconUri.toString()
                     )
                 },
                 label = stringResource(R.string.add_edit_game_field_rating),
@@ -318,7 +383,7 @@ fun AddGameScreen(
                         numberOfPlayers = gameNumberOfPlayers,
                         playTime = gamePlayTime,
                         description = gameDescription,
-                        gameIconUri = gameIconUri.toString()
+//                        gameIconUri = gameIconUri.toString()
                     )
                 },
                 label = stringResource(R.string.add_edit_game_field_weight),
@@ -344,7 +409,7 @@ fun AddGameScreen(
                         numberOfPlayers = gameNumberOfPlayers,
                         playTime = gamePlayTime,
                         description = gameDescription,
-                        gameIconUri = gameIconUri.toString()
+//                        gameIconUri = gameIconUri.toString()
                     )
                 },
                 label = stringResource(R.string.add_edit_game_field_number_players),
@@ -370,7 +435,7 @@ fun AddGameScreen(
                         numberOfPlayers = gameNumberOfPlayers,
                         playTime = gamePlayTime,
                         description = gameDescription,
-                        gameIconUri = gameIconUri.toString()
+//                        gameIconUri = gameIconUri.toString()
                     )
                 },
                 label = stringResource(R.string.add_edit_game_field_play_time),
@@ -396,7 +461,7 @@ fun AddGameScreen(
                         numberOfPlayers = gameNumberOfPlayers,
                         playTime = gamePlayTime,
                         description = gameDescription,
-                        gameIconUri = gameIconUri.toString()
+//                        gameIconUri = gameIconUri.toString()
                     )
                 },
                 label = stringResource(R.string.add_edit_game_field_description),
@@ -446,15 +511,8 @@ fun AddGameScreen(
                 Spacer(modifier = modifier.width(16.dp))
                 Button(
                     onClick = {
-                        if (gameName.isEmpty() || gameName.isBlank()) {
-                            onTakePictureFailed(
-                                context.getString(R.string.add_edit_game_no_game_name_title),
-                                context.getString(R.string.add_edit_game_no_game_name_message)
-                            )
-                        } else {
-                            isUploadingImage = false
-                            takePictureClick()
-                        }
+                        isUploadingImage = false
+                        takePictureClick()
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Transparent
@@ -472,27 +530,29 @@ fun AddGameScreen(
                 }
             }
             if (bitmap != null) {
-                if (isUploadingImage) {
-                    if (!hasTakenPicture) {
-                        gameIconUri = viewModel.saveImage(
-                            LocalContext.current.contentResolver,
-                            gameName,
-                            bitmap
-                        )
-                        saveButtonEnable = checkSaveButtonEnable(
-                            name = gameName,
-                            maker = gameMaker,
-                            rating = gameRating,
-                            weight = gameWeight,
-                            numberOfPlayers = gameNumberOfPlayers,
-                            playTime = gamePlayTime,
-                            description = gameDescription,
-                            gameIconUri = gameIconUri.toString()
-                        )
-                        setHasTakenPicture(true)
-                    }
+//                if (isUploadingImage) {
+                if (!hasTakenPicture) {
+                    gameIconUri = viewModel.saveImage(
+                        LocalContext.current.contentResolver,
+                        existingGame?.gameId.toString(),
+                        bitmap
+                    )
+                    val uriString = gameIconUri.toString()
+                    saveButtonEnable = checkSaveButtonEnable(
+                        name = gameName,
+                        maker = gameMaker,
+                        rating = gameRating,
+                        weight = gameWeight,
+                        numberOfPlayers = gameNumberOfPlayers,
+                        playTime = gamePlayTime,
+                        description = gameDescription,
+//                            gameIconUri = gameIconUri.toString()
+                    )
+                    setHasTakenPicture(true)
+                }
+                gameIconUri?.let { localGameUri ->
                     GlideImage(
-                        model = bitmap,
+                        model = Uri.parse(localGameUri.toString()),
                         contentDescription = null,
                         contentScale = ContentScale.FillBounds,
                         modifier = Modifier
@@ -501,47 +561,68 @@ fun AddGameScreen(
                             .size(50.dp)
                             .clip(CircleShape)
                     )
-                } else if (gameName != "") {
-                    if (!hasTakenPicture) {
-                        gameIconUri =
-                            viewModel.saveImage(
-                                LocalContext.current.contentResolver,
-                                gameName,
-                                bitmap
-                            )
-                        saveButtonEnable = checkSaveButtonEnable(
-                            name = gameName,
-                            maker = gameMaker,
-                            rating = gameRating,
-                            weight = gameWeight,
-                            numberOfPlayers = gameNumberOfPlayers,
-                            playTime = gamePlayTime,
-                            description = gameDescription,
-                            gameIconUri = gameIconUri.toString()
-                        )
-                        setHasTakenPicture(true)
-                    }
-                    gameIconUri?.let { localGameUri ->
-                        GlideImage(
-                            model = Uri.parse(localGameUri.toString()),
-                            contentDescription = null,
-                            contentScale = ContentScale.FillBounds,
-                            modifier = Modifier
-                                .padding(8.dp)
-                                .align(Alignment.CenterHorizontally)
-                                .size(50.dp)
-                                .clip(CircleShape)
-                        )
-                    } ?: run {
-                        EmptyIconImage(
-                            modifier = modifier
-                                .padding(8.dp)
-                                .align(Alignment.CenterHorizontally)
-                                .size(50.dp)
-                                .clip(CircleShape)
-                        )
-                    }
+                } ?: run {
+                    EmptyIconImage(
+                        modifier = modifier
+                            .padding(8.dp)
+                            .align(Alignment.CenterHorizontally)
+                            .size(50.dp)
+                            .clip(CircleShape)
+                    )
                 }
+
+
+//                    GlideImage(
+//                        model = bitmap,
+//                        contentDescription = null,
+//                        contentScale = ContentScale.FillBounds,
+//                        modifier = Modifier
+//                            .padding(8.dp)
+//                            .align(Alignment.CenterHorizontally)
+//                            .size(50.dp)
+//                            .clip(CircleShape)
+//                    )
+//                } else {
+//                    if (!hasTakenPicture) {
+//                        gameIconUri =
+//                            viewModel.saveImage(
+//                                LocalContext.current.contentResolver,
+//                                existingGame?.gameId.toString(),
+//                                bitmap
+//                            )
+//                        saveButtonEnable = checkSaveButtonEnable(
+//                            name = gameName,
+//                            maker = gameMaker,
+//                            rating = gameRating,
+//                            weight = gameWeight,
+//                            numberOfPlayers = gameNumberOfPlayers,
+//                            playTime = gamePlayTime,
+//                            description = gameDescription,
+////                            gameIconUri = gameIconUri.toString()
+//                        )
+//                        setHasTakenPicture(true)
+//                    }
+//                    gameIconUri?.let { localGameUri ->
+//                        GlideImage(
+//                            model = Uri.parse(localGameUri.toString()),
+//                            contentDescription = null,
+//                            contentScale = ContentScale.FillBounds,
+//                            modifier = Modifier
+//                                .padding(8.dp)
+//                                .align(Alignment.CenterHorizontally)
+//                                .size(50.dp)
+//                                .clip(CircleShape)
+//                        )
+//                    } ?: run {
+//                        EmptyIconImage(
+//                            modifier = modifier
+//                                .padding(8.dp)
+//                                .align(Alignment.CenterHorizontally)
+//                                .size(50.dp)
+//                                .clip(CircleShape)
+//                        )
+//                    }
+//                }
             } else if (gameIconUri != null) {
                 if (isEditing) {
                     GlideImage(
@@ -572,7 +653,7 @@ private fun checkSaveButtonEnable(
     numberOfPlayers: String,
     playTime: String,
     description: String,
-    gameIconUri: String,
+//    gameIconUri: String,
 ): Boolean {
     return !(name.isBlank() ||
             name.isEmpty() ||
@@ -587,14 +668,16 @@ private fun checkSaveButtonEnable(
             playTime.isBlank() ||
             playTime.isEmpty() ||
             description.isBlank() ||
-            description.isEmpty() ||
-            gameIconUri.isBlank() ||
-            gameIconUri.isEmpty() ||
-            gameIconUri == NULL_LITERAL)
+            description.isEmpty()
+//            gameIconUri.isBlank() ||
+//            gameIconUri.isEmpty() ||
+//            gameIconUri == NULL_LITERAL
+            )
 }
 
 private fun saveGame(
     context: Context,
+    id: Long,
     name: String,
     oldName: String,
     maker: String,
@@ -605,13 +688,20 @@ private fun saveGame(
     description: String,
     gameIcon: String,
     errorPopup: (errorTitle: String, errorMessage: String) -> Unit,
-    viewModel: AddGameViewModel,
+    viewModel: AddEditGameViewModel,
     isEditing: Boolean,
     onUpdateFail: @Composable AlertDialog.() -> Unit,
-    gameBeingEdited: Game? = null,
+    gameBeingEdited: Game,
     contentResolver: ContentResolver
 ): Boolean {
-    var didSave = true
+    var isGood = true
+    if (id < 0) {
+        errorPopup(
+            "ID is Incorrect",
+            "The id is less than 0."
+        )
+        isGood = false
+    }
     if (name.isEmpty() || name.isBlank()) {
         errorPopup(
             context.getString(R.string.add_edit_game_name_not_correct_title),
@@ -619,7 +709,7 @@ private fun saveGame(
                 R.string.add_edit_game_name_not_correct_message
             )
         )
-        didSave = false
+        isGood = false
     } else if (maker.isEmpty() || maker.isBlank()) {
         errorPopup(
             context.getString(R.string.add_edit_game_maker_not_correct_title),
@@ -627,7 +717,7 @@ private fun saveGame(
                 R.string.add_edit_game_maker_not_correct_message
             )
         )
-        didSave = false
+        isGood = false
     } else if (rating.isEmpty() || rating.isBlank()) {
         errorPopup(
             context.getString(R.string.add_edit_game_rating_not_correct_title),
@@ -635,7 +725,7 @@ private fun saveGame(
                 R.string.add_edit_game_rating_not_correct_message
             )
         )
-        didSave = false
+        isGood = false
     } else if (weight.isEmpty() || weight.isBlank()) {
         errorPopup(
             context.getString(R.string.add_edit_game_weight_not_correct_title),
@@ -643,35 +733,35 @@ private fun saveGame(
                 R.string.add_edit_game_weight_not_correct_message
             )
         )
-        didSave = false
+        isGood = false
     } else if (numberOfPlayers.isEmpty() || numberOfPlayers.isBlank()) {
         errorPopup(
             context.getString(R.string.add_edit_game_number_of_players_not_correct_title),
             context.getString(R.string.add_edit_game_number_of_players_not_correct_message)
         )
-        didSave = false
+        isGood = false
     } else if (playTime.isEmpty() || playTime.isBlank()) {
         errorPopup(
             context.getString(R.string.add_edit_game_play_time_not_correct_title),
             context.getString(R.string.add_edit_game_play_time_not_correct_message)
         )
-        didSave = false
+        isGood = false
     } else if (description.isEmpty() || description.isBlank()) {
         errorPopup(
             context.getString(R.string.add_edit_game_description_not_correct_title),
             context.getString(R.string.add_edit_game_description_not_correct_message)
         )
-        didSave = false
+        isGood = false
     }
 
-    if (didSave) {
+    if (isGood) {
         val ratingNumber =
             rating.toDoubleOrNull() ?: run {
                 errorPopup(
                     context.getString(R.string.add_edit_game_rating_parsing_not_correct_title),
                     context.getString(R.string.add_edit_game_rating_parsing_not_correct_message)
                 )
-                didSave = false
+                isGood = false
                 0.0
             }
 
@@ -681,7 +771,7 @@ private fun saveGame(
                     context.getString(R.string.add_edit_game_weight_parsing_not_correct_title),
                     context.getString(R.string.add_edit_game_weight_parsing_not_correct_message)
                 )
-                didSave = false
+                isGood = false
                 0.0
             }
 
@@ -697,7 +787,7 @@ private fun saveGame(
                     context.getString(R.string.add_edit_game_number_of_players_parsing_not_correct_title),
                     context.getString(R.string.add_edit_game_number_of_players_parsing_not_correct_message)
                 )
-                didSave = false
+                isGood = false
                 ""
             }
 
@@ -714,59 +804,93 @@ private fun saveGame(
                     context.getString(R.string.add_edit_game_play_time_parsing_not_correct_title),
                     context.getString(R.string.add_edit_game_play_time_parsing_not_correct_message)
                 )
-                didSave = false
+                isGood = false
                 ""
             }
 
-        val gameIconValue =
-            if(isEditing && oldName.isNotBlank() && oldName.isNotEmpty() && oldName != name) {
-                val gameUri = Uri.parse(gameIcon)
-                val bitmap = getBitmapFromUri(gameUri, contentResolver)
-                viewModel.deleteImage(contentResolver, gameUri)
-                viewModel.saveImage(
-                    contentResolver,
-                    name,
-                    bitmap
-                ).toString()
-            } else {
-                gameIcon
-            }
+//        val gameIconValue =
+//            if (isEditing) {
+//                gameIcon
+//            } else {
+//                ""
+//            }
+//        val gameIconValue =
+//            if(isEditing && name.isNotBlank() && name.isNotEmpty()) {
+//                val gameUri = Uri.parse(gameIcon)
+//                val bitmap = getBitmapFromUri(gameUri, contentResolver)
+//                val imageExists = viewModel.deleteImage(contentResolver/*, oldName*/, gameUri)
+//                if(!imageExists) {
+//                    viewModel.saveImage(
+//                        contentResolver,
+//                        name,
+//                        bitmap
+//                    ).toString()
+//                } else {
+//                    gameIcon
+//                }
+//            } else {
+//                gameIcon
+//            }
 
-        if (didSave) {
+        if (isGood) {
             runBlocking {
-                if (isEditing) {
-                    gameBeingEdited?.let { game ->
-                        game.name = name
-                        game.maker = maker
-                        game.rating = rating.toDouble()
-                        game.weight = weight.toDouble()
-                        game.numberOfPlayers = numberOfPlayers
-                        game.playTime = playTime
-                        game.description = description
-                        game.gameIconUri = gameIconValue
+                gameBeingEdited.gameId = id
+                gameBeingEdited.name = name
+                gameBeingEdited.maker = maker
+                gameBeingEdited.rating = ratingNumber
+                gameBeingEdited.weight = weightNumber
+                gameBeingEdited.numberOfPlayers = numberOfPlayersValue
+                gameBeingEdited.playTime = playTimeValue
+                gameBeingEdited.description = description
+                gameBeingEdited.gameIconUri = gameIcon
 
-                        viewModel.updateGame(game)
-                    } ?: run {
-                        onUpdateFail
-                    }
+                if (isEditing) {
+
+
+//                        gameBeingEdited.gameIconUri = saveImage(
+//                            game.gameId.toString(),
+//                            contentResolver,
+//                            gameIcon,
+//                            viewModel
+//                        )
+
+                    viewModel.updateGame(gameBeingEdited)
                 } else {
-                    val game = Game(
-                        name,
-                        maker,
-                        ratingNumber,
-                        weightNumber,
-                        numberOfPlayersValue,
-                        playTimeValue,
-                        description,
-                        gameIconValue
-                    )
-                    viewModel.insertGame(game)
+//                    game.gameIconUri = saveImage(
+//                        game.gameId.toString(),
+//                        contentResolver,
+//                        gameIconValue,
+//                        viewModel
+//                    )
+                    viewModel.insertGame(gameBeingEdited)
                 }
             }
         }
     }
 
-    return didSave
+    return isGood
+}
+
+private fun saveImage(
+    gameId: String,
+    contentResolver: ContentResolver,
+    gameIconUriString: String,
+    viewModel: AddEditGameViewModel,
+): String {
+    val gameUriString: String
+    val gameUri = Uri.parse(gameIconUriString)
+    val bitmap = getBitmapFromUri(gameUri, contentResolver)
+    val imageExists = viewModel.deleteImage(contentResolver/*, oldName*/, gameUri)
+    gameUriString = if (!imageExists) {
+        viewModel.saveImage(
+            contentResolver,
+            gameId,
+            bitmap
+        ).toString()
+    } else {
+        gameIconUriString
+    }
+    return gameUriString
 }
 
 //@Preview(showBackground = false)
