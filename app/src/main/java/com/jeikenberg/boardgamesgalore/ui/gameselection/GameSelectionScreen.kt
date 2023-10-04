@@ -62,7 +62,8 @@ fun GameSelectionScreen(
     isSearching: Boolean = false,
     onValueChange: (String) -> Unit,
     onAddGameClicked: () -> Unit,
-    onEditGameClicked: (Game) -> Unit,
+    onEditGameClicked: (Long) -> Unit,
+    onGameClicked: (Long) -> Unit,
     modifier: Modifier
 ) {
     val viewModel: GameSelectionViewModel = hiltViewModel()
@@ -137,11 +138,13 @@ fun GameSelectionScreen(
                         items(items = gameList, key = { it.gameId }) { game ->
                             val gameImage = viewModel.getImageByGame(contentResolver, game)
                             GameSearchItem(
-                                onGameClicked = {},
+                                onGameClicked = {gameId ->
+                                    onGameClicked(gameId)
+                                },
                                 game = game,
                                 gameImage = gameImage,
-                                onGameEditClicked = {
-                                    onEditGameClicked(game)
+                                onGameEditClicked = {gameId ->
+                                    onEditGameClicked(gameId)
                                 },
                                 modifier = modifier
                             )
@@ -157,7 +160,7 @@ fun GameSelectionScreen(
 @Composable
 fun GameSearchItem(
     onGameClicked: (Long) -> Unit,
-    onGameEditClicked: () -> Unit,
+    onGameEditClicked: (Long) -> Unit,
     game: Game,
     gameImage: MediaStoreImage?,
     modifier: Modifier
@@ -169,6 +172,9 @@ fun GameSearchItem(
     Card(
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
         modifier = modifier
+            .clickable {
+                onGameClicked(game.gameId)
+            }
             .padding(8.dp)
             .fillMaxWidth()
     ) {
@@ -180,9 +186,6 @@ fun GameSearchItem(
             Row(
                 modifier = modifier
                     .fillMaxSize()
-                    .clickable {
-                        onGameClicked(game.gameId)
-                    }
             ) {
                 if (checkUri(LocalContext.current, gameImage?.contentUri.toString())) {
                     GlideImage(
@@ -229,7 +232,7 @@ fun GameSearchItem(
                     modifier = modifier
                         .align(Alignment.CenterVertically)
                         .clickable {
-                            onGameEditClicked()
+                            onGameEditClicked(game.gameId)
                         }
                         .padding(end = 8.dp)
                 )

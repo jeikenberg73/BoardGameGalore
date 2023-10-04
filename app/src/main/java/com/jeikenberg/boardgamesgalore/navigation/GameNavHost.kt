@@ -22,11 +22,13 @@ import androidx.navigation.compose.rememberNavController
 import coil.annotation.ExperimentalCoilApi
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.jeikenberg.boardgamesgalore.data.game.Game
-import com.jeikenberg.boardgamesgalore.ui.gamedetails.GameInfoScreen
-import com.jeikenberg.boardgamesgalore.ui.gameselection.GameSelectionScreen
 import com.jeikenberg.boardgamesgalore.ui.addedit.AddGameScreen
 import com.jeikenberg.boardgamesgalore.ui.addedit.TakePicture
 import com.jeikenberg.boardgamesgalore.ui.addedit.UploadImageCompose
+import com.jeikenberg.boardgamesgalore.ui.gamedetails.GameDescriptionScreen
+import com.jeikenberg.boardgamesgalore.ui.gamedetails.GameImagesScreen
+import com.jeikenberg.boardgamesgalore.ui.gamedetails.GameInfoScreen
+import com.jeikenberg.boardgamesgalore.ui.gameselection.GameSelectionScreen
 import com.jeikenberg.boardgamesgalore.util.AlertDialogComponent
 import com.jeikenberg.boardgamesgalore.util.navigateSingleTopTo
 import com.jeikenberg.boardgamesgalore.util.navigateToDetails
@@ -86,12 +88,13 @@ fun GameNavHost(
                 isSearching = isSearching,
                 onValueChange = gameSelectionViewModel::onSearchTextChange,
                 onAddGameClicked = {
-                    game = null
                     navController.navigateSingleTopTo(AddGame.route)
                 },
-                onEditGameClicked = { updatedGame ->
-                    game = updatedGame
-                    navController.navigateSingleTopTo(AddGame.route)
+                onEditGameClicked = { gameId ->
+                    navController.navigateToDetails(AddGame.route, gameId)
+                },
+                onGameClicked = { gameId ->
+                    navController.navigateToDetails(GameInfo.route, gameId)
                 },
                 modifier = modifier
             )
@@ -101,8 +104,8 @@ fun GameNavHost(
             AddGameScreen(
                 existingGame = game,
                 games = games,
-                updateGame = {updatedGame ->
-                             game = updatedGame
+                updateGame = { updatedGame ->
+                    game = updatedGame
                 },
                 takePictureClick = {
                     navController.navigate(TakePicture.route)
@@ -151,8 +154,8 @@ fun GameNavHost(
             )
         }
         composable(
-                route = UploadImage.route
-                ) {
+            route = UploadImage.route
+        ) {
             UploadImageCompose(
                 onImageChosen = { localBitmap ->
                     bitmap = localBitmap
@@ -166,30 +169,37 @@ fun GameNavHost(
             arguments = GameInfo.arguments
         ) { navBackStackEntry ->
             GameInfoScreen(
-                gameType = navBackStackEntry.arguments?.getLong(GameInfo.gameTypeArgs),
-                onClickDescription = { gameId ->
-                    navController.navigateToDetails(GameDescription.route, gameId)
-                },
-                onClickImages = { gameId ->
-                    navController.navigateToDetails(GameImages.route, gameId)
+                gameId = navBackStackEntry.arguments?.getLong(GameInfo.gameTypeArgs),
+                onTabSelection = { gameDestination, gameId ->
+                    navController.navigateToDetails(gameDestination.route, gameId)
                 },
                 modifier = modifier
             )
         }
         composable(
-            route = GameInfo.routeWithArgs,
-            arguments = GameInfo.arguments
+            route = GameDescription.routeWithArgs,
+            arguments = GameDescription.arguments
         ) { navBackStackEntry ->
-            val gameType =
-                navBackStackEntry.arguments?.getLong(GameInfo.gameTypeArgs) ?: 0
-            GameInfoScreen(
-                gameType = gameType,
-                onClickDescription = {},
-                onClickImages = {},
+            GameDescriptionScreen(
+                gameId = navBackStackEntry.arguments?.getLong(GameDescription.gameTypeArgs),
+                onTabSelection = { gameDestination, gameId ->
+                    navController.navigateToDetails(gameDestination.route, gameId)
+                },
                 modifier = modifier
             )
         }
-
+        composable(
+            route = GameImages.routeWithArgs,
+            arguments = GameImages.arguments
+        ) { navBackStackEntry ->
+            GameImagesScreen(
+                gameId = navBackStackEntry.arguments?.getLong(GameImages.gameTypeArgs),
+                onTabSelection = { gameDestination, gameId ->
+                    navController.navigateToDetails(gameDestination.route, gameId)
+                },
+                modifier = modifier
+            )
+        }
     }
     AlertDialogComponent(
         title = alertDialogTitle,
