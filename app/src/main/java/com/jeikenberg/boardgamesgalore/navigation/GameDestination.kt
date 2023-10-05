@@ -16,76 +16,75 @@ interface GameDestination {
     val label: String
 }
 
-object GameList: GameDestination {
+object GameList : GameDestination {
     override val icon = Icons.Filled.List
     override val route = "gameList"
     override val label = "Game List"
 }
 
-object GameInfo: GameDestination {
-    override val route = "gameInfo"
-    override val icon = Icons.Filled.Info
-    override val label = "Info"
-    const val gameTypeArgs = "game_type"
-    val routeWithArgs = "${route}/{${gameTypeArgs}}"
-    val arguments = listOf(
-        navArgument(gameTypeArgs) { type = NavType.LongType }
-    )
-}
-
-object GameDescription: GameDestination {
-    override val route = "gameDescription"
-    override val icon = Icons.Filled.Feed
-    override val label = "Description"
-    const val gameTypeArgs = "game_type"
-    val routeWithArgs = "${route}/{${gameTypeArgs}}"
-    val arguments = listOf(
-        navArgument(gameTypeArgs) { type = NavType.LongType}
-    )
-}
-
-object GameImages: GameDestination {
-    override val route = "gameImages"
-    override val icon = Icons.Filled.Image
-    override val label = "Images"
-    const val gameTypeArgs = "game_type"
-    val routeWithArgs = "${route}/{${gameTypeArgs}}"
-    val arguments = listOf(
-        navArgument(gameTypeArgs) { type = NavType.LongType }
-    )
-}
-
-object UploadImage: GameDestination {
-    override val icon = Icons.Filled.Image
-    override val route = "uploadImage"
-    override val label = "Upload Image"
-//    val icon = Icons.Filled.Image
-//    const val uploadedUriTypesArgs = "uploadedImageUri"
-//    val routeWithArgs = "$route/{$uploadedUriTypesArgs}"
+object AddGame : GameDestination {
+    override val icon = Icons.Filled.Add
+    override val route = "addGame"
+    override val label = "Add Game"
+//    const val gameIdArgs = "game_id"
+//    val routeWithArgs = "${route}/{${gameIdArgs}}"
 //    val arguments = listOf(
-//        navArgument(uploadedUriTypesArgs) { type = NavType.StringType }
+//        navArgument(gameIdArgs) { type = NavType.LongType }
 //    )
 }
 
-object GameImage: GameDestination {
+object GameInfo : GameDestination {
+    override val route = "gameInfo"
+    override val icon = Icons.Filled.Info
+    override val label = "Info"
+    const val gameIdArgs = "game_id"
+    val routeWithArgs = "${route}/{${gameIdArgs}}"
+    val arguments = listOf(
+        navArgument(gameIdArgs) { type = NavType.LongType }
+    )
+}
+
+object GameDescription : GameDestination {
+    override val route = "gameDescription"
+    override val icon = Icons.Filled.Feed
+    override val label = "Description"
+    const val gameIdArgs = "game_id"
+    val routeWithArgs = "${route}/{${gameIdArgs}}"
+    val arguments = listOf(
+        navArgument(gameIdArgs) { type = NavType.LongType }
+    )
+}
+
+object GameImages : GameDestination {
+    override val route = "gameImages"
+    override val icon = Icons.Filled.Image
+    override val label = "Images"
+    const val gameIdArgs = "game_id"
+    val routeWithArgs = "${route}/{${gameIdArgs}}"
+    val arguments = listOf(
+        navArgument(gameIdArgs) { type = NavType.LongType }
+    )
+}
+
+object UploadImage : GameDestination {
+    override val icon = Icons.Filled.Image
+    override val route = "uploadImage"
+    override val label = "Upload Image"
+}
+
+object GameImage : GameDestination {
     override val icon = Icons.Filled.Image
     override val route = "gameImage"
     override val label = "Game Image"
 }
 
-object AddGame: GameDestination {
-    override val icon = Icons.Filled.Add
-    override val route = "addGame"
-    override val label = "Add Game"
-}
-
-object TakePicture: GameDestination {
+object TakePicture : GameDestination {
     override val icon = Icons.Filled.Image
     override val route = "takePicture"
     override val label = "Take Picture"
 }
 
-object AddImage: GameDestination {
+object AddImage : GameDestination {
     override val icon = Icons.Filled.Add
     override val route = "addImage"
     override val label = "Add Image"

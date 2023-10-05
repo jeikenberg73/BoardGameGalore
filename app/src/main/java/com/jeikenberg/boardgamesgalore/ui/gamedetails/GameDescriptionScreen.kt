@@ -17,7 +17,6 @@ import com.jeikenberg.boardgamesgalore.navigation.GameDestination
 import com.jeikenberg.boardgamesgalore.navigation.gameTabRowScreens
 import com.jeikenberg.boardgamesgalore.ui.components.GameBottomNavBar
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GameDescriptionScreen(
     gameId: Long?,

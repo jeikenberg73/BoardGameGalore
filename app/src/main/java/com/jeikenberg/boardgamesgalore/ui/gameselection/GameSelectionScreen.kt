@@ -22,13 +22,15 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.listSaver
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,31 +44,29 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.jeikenberg.boardgamesgalore.R
 import com.jeikenberg.boardgamesgalore.data.game.Game
 import com.jeikenberg.boardgamesgalore.ui.theme.GreenGradiantBackgroundStart
 import com.jeikenberg.boardgamesgalore.ui.theme.GreenGradiantBackgroundStop
-import com.jeikenberg.boardgamesgalore.util.TopSearchBar
 import com.jeikenberg.boardgamesgalore.util.MediaStoreImage
+import com.jeikenberg.boardgamesgalore.util.TopSearchBar
 import com.jeikenberg.boardgamesgalore.util.checkUri
 import com.jeikenberg.boardgamesgalore.viewmodels.GameSelectionViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GameSelectionScreen(
+    viewModel: GameSelectionViewModel,
     searchText: String,
     gameList: List<Game>,
     isSearching: Boolean = false,
     onValueChange: (String) -> Unit,
     onAddGameClicked: () -> Unit,
-    onEditGameClicked: (Long) -> Unit,
+    onEditGameClicked: (Game) -> Unit,
     onGameClicked: (Long) -> Unit,
     modifier: Modifier
 ) {
-    val viewModel: GameSelectionViewModel = hiltViewModel()
     val contentResolver = LocalContext.current.contentResolver
     Scaffold(
         topBar = {
@@ -138,13 +138,13 @@ fun GameSelectionScreen(
                         items(items = gameList, key = { it.gameId }) { game ->
                             val gameImage = viewModel.getImageByGame(contentResolver, game)
                             GameSearchItem(
-                                onGameClicked = {gameId ->
+                                onGameClicked = { gameId ->
                                     onGameClicked(gameId)
                                 },
                                 game = game,
                                 gameImage = gameImage,
-                                onGameEditClicked = {gameId ->
-                                    onEditGameClicked(gameId)
+                                onGameEditClicked = { localGame ->
+                                    onEditGameClicked(localGame)
                                 },
                                 modifier = modifier
                             )
@@ -160,7 +160,7 @@ fun GameSelectionScreen(
 @Composable
 fun GameSearchItem(
     onGameClicked: (Long) -> Unit,
-    onGameEditClicked: (Long) -> Unit,
+    onGameEditClicked: (Game) -> Unit,
     game: Game,
     gameImage: MediaStoreImage?,
     modifier: Modifier
@@ -232,13 +232,33 @@ fun GameSearchItem(
                     modifier = modifier
                         .align(Alignment.CenterVertically)
                         .clickable {
-                            onGameEditClicked(game.gameId)
+                            onGameEditClicked(game)
                         }
                         .padding(end = 8.dp)
                 )
 
             }
         }
+    }
+}
+
+@Composable
+fun <T : Any> rememberMutableStateListOf(vararg elements: T): SnapshotStateList<T> {
+    return rememberSaveable(
+        saver = listSaver(
+            save = { stateList ->
+                if (stateList.isNotEmpty()) {
+                    val first = stateList.first()
+                    if (!canBeSaved(first)) {
+                        throw IllegalStateException("${first::class} cannot be saved. By default only types which can be stored in the Bundle class can be saved.")
+                    }
+                }
+                stateList.toList()
+            },
+            restore = { it.toMutableStateList() }
+        )
+    ) {
+        elements.toList().toMutableStateList()
     }
 }
 //

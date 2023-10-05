@@ -14,7 +14,7 @@ interface GameDao {
     fun getGames(): Flow<List<Game>>
 
     @Query("SELECT * FROM game_table WHERE gameId = :gameId")
-    fun getGameById(gameId: Long): Flow<Game>
+    fun getGameById(gameId: Long): Game
 
     @Query("SELECT * FROM game_table WHERE name = :gameName")
     fun getGameByName(gameName: String): Flow<Game>

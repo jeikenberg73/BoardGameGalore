@@ -8,21 +8,25 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Text
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.jeikenberg.boardgamesgalore.R
+import com.jeikenberg.boardgamesgalore.ui.theme.BoardGamesGaloreTheme
 import com.jeikenberg.boardgamesgalore.ui.theme.GreenColorStops
 
 @Composable
@@ -69,7 +73,6 @@ fun AlertDialogComponent(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GameTextField(
     value: String,
@@ -82,16 +85,17 @@ fun GameTextField(
     modifier: Modifier
 ) {
     TextField(
-        modifier = modifier
-            .background(
-                brush = Brush.verticalGradient(colorStops = GreenColorStops),
-                shape = RoundedCornerShape(8.dp)
-            )
-            .fillMaxWidth(),
         textStyle = MaterialTheme.typography.titleLarge,
-        colors = TextFieldDefaults.textFieldColors(
-            textColor = MaterialTheme.colorScheme.onSecondary,
-            containerColor = Color.Transparent,
+        colors = TextFieldDefaults.colors(
+            focusedTextColor = MaterialTheme.colorScheme.onSecondary,
+            unfocusedTextColor = MaterialTheme.colorScheme.onSecondary,
+            disabledTextColor = MaterialTheme.colorScheme.onSecondary,
+            errorTextColor = MaterialTheme.colorScheme.onSecondary,
+            focusedLabelColor = Color.Transparent,
+            unfocusedContainerColor = Color.Transparent,
+            disabledContainerColor = Color.Transparent,
+            errorContainerColor = Color.Transparent,
+            focusedContainerColor = Color.Transparent,
             focusedIndicatorColor = Color.Transparent,
             unfocusedIndicatorColor = Color.Transparent
         ),
@@ -109,7 +113,14 @@ fun GameTextField(
             )
         },
         keyboardOptions = keyboardOptions,
-        keyboardActions = keyboardActions
+        keyboardActions = keyboardActions,
+        shape = RoundedCornerShape(40.dp),
+        modifier = modifier
+            .background(
+                brush = Brush.verticalGradient(colorStops = GreenColorStops),
+                shape = RoundedCornerShape(8.dp)
+            )
+            .fillMaxWidth()
     )
 }
 
@@ -123,4 +134,23 @@ fun EmptyIconImage(
         contentScale = ContentScale.Crop,
         modifier = modifier
     )
+}
+
+@OptIn(ExperimentalComposeUiApi::class)
+@Preview(showBackground = true, backgroundColor = 0xFF777680)
+@Composable
+fun GameTextFieldPreview() {
+    val (focusRequester) = FocusRequester.createRefs()
+    BoardGamesGaloreTheme {
+        GameTextField(
+            value = "Test",
+            onValueChange = {},
+            label = "Place Text Here",
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+            keyboardActions = KeyboardActions(
+                onNext = { focusRequester.requestFocus() }
+            ),
+            modifier = Modifier
+        )
+    }
 }

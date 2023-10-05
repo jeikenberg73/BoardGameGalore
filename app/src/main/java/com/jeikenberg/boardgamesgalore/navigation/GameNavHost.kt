@@ -83,6 +83,7 @@ fun GameNavHost(
             val searchText by gameSelectionViewModel.searchText.collectAsState()
             val isSearching by gameSelectionViewModel.isSearching.collectAsState()
             GameSelectionScreen(
+                viewModel = gameSelectionViewModel,
                 searchText = searchText,
                 gameList = searchedGames,
                 isSearching = isSearching,
@@ -90,8 +91,9 @@ fun GameNavHost(
                 onAddGameClicked = {
                     navController.navigateSingleTopTo(AddGame.route)
                 },
-                onEditGameClicked = { gameId ->
-                    navController.navigateToDetails(AddGame.route, gameId)
+                onEditGameClicked = { retrievedGame ->
+                    game = retrievedGame
+                    navController.navigateSingleTopTo(AddGame.route)
                 },
                 onGameClicked = { gameId ->
                     navController.navigateToDetails(GameInfo.route, gameId)
@@ -99,9 +101,12 @@ fun GameNavHost(
                 modifier = modifier
             )
         }
-        composable(route = AddGame.route) {
+        composable(
+            route = AddGame.route
+        ) {
             val games by gameSelectionViewModel.searchedGames.collectAsState()
             AddGameScreen(
+                viewModel = addEditGameViewModel,
                 existingGame = game,
                 games = games,
                 updateGame = { updatedGame ->
@@ -169,7 +174,7 @@ fun GameNavHost(
             arguments = GameInfo.arguments
         ) { navBackStackEntry ->
             GameInfoScreen(
-                gameId = navBackStackEntry.arguments?.getLong(GameInfo.gameTypeArgs),
+                gameId = navBackStackEntry.arguments?.getLong(GameInfo.gameIdArgs),
                 onTabSelection = { gameDestination, gameId ->
                     navController.navigateToDetails(gameDestination.route, gameId)
                 },
@@ -181,7 +186,7 @@ fun GameNavHost(
             arguments = GameDescription.arguments
         ) { navBackStackEntry ->
             GameDescriptionScreen(
-                gameId = navBackStackEntry.arguments?.getLong(GameDescription.gameTypeArgs),
+                gameId = navBackStackEntry.arguments?.getLong(GameDescription.gameIdArgs),
                 onTabSelection = { gameDestination, gameId ->
                     navController.navigateToDetails(gameDestination.route, gameId)
                 },
@@ -193,7 +198,7 @@ fun GameNavHost(
             arguments = GameImages.arguments
         ) { navBackStackEntry ->
             GameImagesScreen(
-                gameId = navBackStackEntry.arguments?.getLong(GameImages.gameTypeArgs),
+                gameId = navBackStackEntry.arguments?.getLong(GameImages.gameIdArgs),
                 onTabSelection = { gameDestination, gameId ->
                     navController.navigateToDetails(gameDestination.route, gameId)
                 },

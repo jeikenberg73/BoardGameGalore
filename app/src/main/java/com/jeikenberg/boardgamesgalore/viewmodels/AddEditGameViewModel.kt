@@ -15,6 +15,7 @@ import com.mr0xf00.easycrop.ImageCropper
 import com.mr0xf00.easycrop.crop
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
@@ -73,4 +74,14 @@ class AddEditGameViewModel @Inject constructor(
             val result = imageCropper.crop(uri, app)
         }
     }
+
+    fun getGameById(gameId: Long): Game? {
+        var game: Game? = null
+        viewModelScope.launch(Dispatchers.IO) {
+            game = gameRepository.getGameById(gameId)
+        }
+        return game
+    }
+
+    data class GameState(val game: Game)
 }

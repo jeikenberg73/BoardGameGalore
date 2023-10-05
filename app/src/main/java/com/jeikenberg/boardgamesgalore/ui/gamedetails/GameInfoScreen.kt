@@ -49,7 +49,7 @@ fun GameInfoScreen(
         ) {
             Text(
                 style = MaterialTheme.typography.displayLarge,
-                text = "Game Info"
+                text = "Game Info\nGame: $gameId"
             )
         }
     }

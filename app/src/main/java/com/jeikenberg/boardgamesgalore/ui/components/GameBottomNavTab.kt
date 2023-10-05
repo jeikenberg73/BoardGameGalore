@@ -82,7 +82,6 @@ fun GameBottomNavBar(
 
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true, backgroundColor = 0xFF777680)
 @Composable
 fun GameBottomNavBarPreview() {

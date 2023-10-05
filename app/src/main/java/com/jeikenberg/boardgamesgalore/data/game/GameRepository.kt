@@ -18,7 +18,7 @@ class GameRepository @Inject constructor(
 
     fun getGamesStream(): Flow<List<Game>> = gameDao.getGames()
 
-    fun getGameByIdStream(gameId: Long): Flow<Game> = gameDao.getGameById(gameId)
+    fun getGameById(gameId: Long): Game = gameDao.getGameById(gameId)
 
     fun getGameByNameStream(gameName: String): Flow<Game> = gameDao.getGameByName(gameName)
 
