@@ -39,8 +39,9 @@ class GameSelectionViewModel @Inject constructor(
 
     val gameUiState: StateFlow<GameUiState> =
         gameRepository.getGamesStream()
-            .map {
-                GameUiState(it)
+            .map {listOfGame ->
+                _searchedGames.emit(listOfGame)
+                GameUiState(listOfGame)
             }
             .stateIn(
                 scope = viewModelScope,
@@ -48,24 +49,26 @@ class GameSelectionViewModel @Inject constructor(
                 initialValue = GameUiState()
             )
 
-
     private val _searchText = MutableStateFlow("")
     val searchText = _searchText.asStateFlow()
 
     private val _isSearching = MutableStateFlow(false)
     val isSearching = _isSearching.asStateFlow()
 
-    private val _searchedGames = MutableStateFlow(gameUiState.value.games)
+    private var _searchedGames = MutableStateFlow(gameUiState.value.games)
     val searchedGames = searchText
         .debounce(1000L)
         .onEach { _isSearching.update { true } }
         .combine(_searchedGames) { text, _ ->
-            val games = gameUiState.value.games
+            val games = _searchedGames.value
             if (text.isBlank()) {
                 games
             } else {
-                games.filter { nextGame ->
+                val filteredList = games.filter { nextGame ->
                     nextGame.doesMatchSearchQuery(text)
+                }
+                filteredList.ifEmpty {
+                    games
                 }
             }
         }

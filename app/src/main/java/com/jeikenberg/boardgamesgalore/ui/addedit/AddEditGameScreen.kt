@@ -295,8 +295,6 @@ fun AddGameScreen(
                         numberOfPlayers = gameNumberOfPlayers,
                         playTime = gamePlayTime,
                         description = gameDescription,
-                        tempUri = tempImageUri,
-                        bitmap = bitmap
                     )
                 },
                 label = stringResource(R.string.add_edit_game_field_name),
@@ -322,8 +320,6 @@ fun AddGameScreen(
                         numberOfPlayers = gameNumberOfPlayers,
                         playTime = gamePlayTime,
                         description = gameDescription,
-                        tempUri = tempImageUri,
-                        bitmap = bitmap
                     )
                 },
                 label = stringResource(R.string.add_edit_game_field_maker),
@@ -349,8 +345,6 @@ fun AddGameScreen(
                         numberOfPlayers = gameNumberOfPlayers,
                         playTime = gamePlayTime,
                         description = gameDescription,
-                        tempUri = tempImageUri,
-                        bitmap = bitmap
                     )
                 },
                 label = stringResource(R.string.add_edit_game_field_rating),
@@ -376,8 +370,6 @@ fun AddGameScreen(
                         numberOfPlayers = gameNumberOfPlayers,
                         playTime = gamePlayTime,
                         description = gameDescription,
-                        tempUri = tempImageUri,
-                        bitmap = bitmap
                     )
                 },
                 label = stringResource(R.string.add_edit_game_field_weight),
@@ -403,8 +395,6 @@ fun AddGameScreen(
                         numberOfPlayers = gameNumberOfPlayers,
                         playTime = gamePlayTime,
                         description = gameDescription,
-                        tempUri = tempImageUri,
-                        bitmap = bitmap
                     )
                 },
                 label = stringResource(R.string.add_edit_game_field_number_players),
@@ -430,8 +420,6 @@ fun AddGameScreen(
                         numberOfPlayers = gameNumberOfPlayers,
                         playTime = gamePlayTime,
                         description = gameDescription,
-                        tempUri = tempImageUri,
-                        bitmap = bitmap
                     )
                 },
                 label = stringResource(R.string.add_edit_game_field_play_time),
@@ -457,8 +445,6 @@ fun AddGameScreen(
                         numberOfPlayers = gameNumberOfPlayers,
                         playTime = gamePlayTime,
                         description = gameDescription,
-                        tempUri = tempImageUri,
-                        bitmap = bitmap
                     )
                 },
                 label = stringResource(R.string.add_edit_game_field_description),
@@ -540,9 +526,7 @@ fun AddGameScreen(
                         weight = gameWeight,
                         numberOfPlayers = gameNumberOfPlayers,
                         playTime = gamePlayTime,
-                        description = gameDescription,
-                        tempUri = tempImageUri,
-                        bitmap = bitmap
+                        description = gameDescription
                     )
                     setHasTakenPicture(true)
                 }
@@ -595,9 +579,7 @@ private fun checkSaveButtonEnable(
     weight: String,
     numberOfPlayers: String,
     playTime: String,
-    description: String,
-    tempUri: Uri?,
-    bitmap: Bitmap?
+    description: String
 ): Boolean {
     return !(name.isBlank() ||
             name.isEmpty() ||
@@ -612,9 +594,7 @@ private fun checkSaveButtonEnable(
             playTime.isBlank() ||
             playTime.isEmpty() ||
             description.isBlank() ||
-            description.isEmpty() ||
-            tempUri == null ||
-            bitmap == null
+            description.isEmpty()
             )
 }
 

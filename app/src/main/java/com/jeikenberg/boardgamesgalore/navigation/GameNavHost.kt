@@ -89,6 +89,7 @@ fun GameNavHost(
                 isSearching = isSearching,
                 onValueChange = gameSelectionViewModel::onSearchTextChange,
                 onAddGameClicked = {
+                    game = null
                     navController.navigateSingleTopTo(AddGame.route)
                 },
                 onEditGameClicked = { retrievedGame ->
@@ -96,6 +97,7 @@ fun GameNavHost(
                     navController.navigateSingleTopTo(AddGame.route)
                 },
                 onGameClicked = { gameId ->
+                    game = null
                     navController.navigateToDetails(GameInfo.route, gameId)
                 },
                 modifier = modifier
