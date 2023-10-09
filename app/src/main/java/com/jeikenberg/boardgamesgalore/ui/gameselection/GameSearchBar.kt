@@ -59,7 +59,7 @@ fun GameSearchBar(
         },
         trailingIcon = {
             IconButton(
-                onClick = { /*TODO*/ }
+                onClick = { onValueChange("") }
             ) {
                 Icon(
                     imageVector = Icons.Default.Close,
