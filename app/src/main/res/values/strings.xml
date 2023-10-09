@@ -55,4 +55,8 @@
     <string name="cropper_saving_result">Saving Result</string>
     <string name="cropper_error_while_opening_the_image">Error while opening the image!</string>
     <string name="cropper_error_while_saving_the_image">Error while saving the image!</string>
+    <string name="add_edit_game_no_bitmap_title">No Bitmap</string>
+    <string name="add_edit_game_no_bitmap_message">There was an issue retrieving the bitmap.</string>
+    <string name="add_edit_game_no_image_specified_title">No Image Was Specified</string>
+    <string name="add_edit_game_no_image_specified_message">The location of the image was not specified.</string>
 </resources>

@@ -234,6 +234,7 @@ fun AddGameScreen(
                         numberOfPlayers = gameStats[GAME_NUMBER_OF_PLAYERS]!!,
                         playTime = gameStats[GAME_PLAY_TIME]!!,
                         description = gameStats[GAME_DESCRIPTION]!!,
+                        gameIconUri = gameStats[GAME_ICON_IMAGE_URI]!!,
                         errorPopup = { title, message ->
                             showDialog = true
                             titleValue = title
@@ -251,8 +252,8 @@ fun AddGameScreen(
                             )
                         },
                         gameBeingEdited = existingGame!!,
-                        tempImageUri = tempImageUri!!,
-                        bitmap = bitmap!!,
+                        tempImageUri = tempImageUri,
+                        bitmap = bitmap,
                         contentResolver = contentResolver
                     )
                     if (didSave) {
@@ -608,13 +609,14 @@ private fun saveGame(
     numberOfPlayers: String,
     playTime: String,
     description: String,
+    gameIconUri: String,
     errorPopup: (errorTitle: String, errorMessage: String) -> Unit,
     viewModel: AddEditGameViewModel,
     isEditing: Boolean,
     onUpdateFail: @Composable AlertDialog.() -> Unit,
     gameBeingEdited: Game,
-    tempImageUri: Uri,
-    bitmap: Bitmap,
+    tempImageUri: Uri?,
+    bitmap: Bitmap?,
     contentResolver: ContentResolver
 ): Boolean {
     var isGood = true
@@ -733,29 +735,41 @@ private fun saveGame(
 
         if (isGood) {
             runBlocking {
-                gameBeingEdited.gameId = id
-                gameBeingEdited.name = name
-                gameBeingEdited.maker = maker
-                gameBeingEdited.rating = ratingNumber
-                gameBeingEdited.weight = weightNumber
-                gameBeingEdited.numberOfPlayers = numberOfPlayersValue
-                gameBeingEdited.playTime = playTimeValue
-                gameBeingEdited.description = description
-                gameBeingEdited.gameIconUri = viewModel
-                    .saveImage(contentResolver, gameBeingEdited.gameId.toString(), bitmap)
-                    .toString()
+                var uriString: String = gameBeingEdited.gameIconUri
+                bitmap?.let { localBitmap ->
+                    if (gameIconUri.isNotBlank() && gameIconUri.isNotEmpty()) {
+                        viewModel.deleteImage(contentResolver, Uri.parse(gameIconUri))
+                    }
+                    uriString = viewModel
+                        .saveImage(contentResolver, gameBeingEdited.gameId.toString(), localBitmap)
+                        .toString()
+                }
 
-                viewModel.deleteImage(contentResolver, tempImageUri)
+                val gameToUpdate = gameBeingEdited.copy(
+                    gameId = id,
+                    name = name,
+                    maker = maker,
+                    rating = ratingNumber,
+                    weight = weightNumber,
+                    numberOfPlayers = numberOfPlayersValue,
+                    playTime = playTimeValue,
+                    description = description,
+                    gameIconUri = uriString
+                )
+
+                tempImageUri?.let { uri ->
+                    viewModel.deleteImage(contentResolver, uri)
+                }
 
                 if (isEditing) {
-                    viewModel.updateGame(gameBeingEdited)
+                    viewModel.updateGame(gameToUpdate)
                 } else {
-                    viewModel.insertGame(gameBeingEdited)
+                    viewModel.insertGame(gameToUpdate)
                 }
+
             }
         }
     }
-
     return isGood
 }
 
