@@ -1,5 +1,6 @@
 package com.jeikenberg.boardgamesgalore.ui.gameselection
 
+import android.content.ContentResolver
 import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -136,7 +137,10 @@ fun GameSelectionScreen(
                             .background(MaterialTheme.colorScheme.primary)
                     ) {
                         items(items = gameList, key = { it.gameId }) { game ->
-                            val gameImage = viewModel.getImageByGame(contentResolver, game)
+                            var gameImage: MediaStoreImage? = null
+                            if(doesUriImageExist(game.gameIconUri, contentResolver)){
+                                gameImage = viewModel.getImageByGame(contentResolver, game)
+                            }
                             GameSearchItem(
                                 onGameClicked = { gameId ->
                                     onGameClicked(gameId)
@@ -153,6 +157,15 @@ fun GameSelectionScreen(
                 }
             }
         }
+    }
+}
+
+private fun doesUriImageExist(uri: String, contentResolver: ContentResolver): Boolean {
+    return try {
+        contentResolver.openInputStream(Uri.parse(uri))?.close()
+        true
+    } catch (e: Exception) {
+        return false
     }
 }
 

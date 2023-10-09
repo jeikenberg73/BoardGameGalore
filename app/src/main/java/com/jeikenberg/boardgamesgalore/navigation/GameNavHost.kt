@@ -36,6 +36,7 @@ import com.jeikenberg.boardgamesgalore.viewmodels.AddEditGameViewModel
 import com.jeikenberg.boardgamesgalore.viewmodels.GameSelectionViewModel
 import com.mr0xf00.easycrop.rememberImageCropper
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @ExperimentalCoilApi
 @ExperimentalCoroutinesApi
@@ -77,11 +78,11 @@ fun GameNavHost(
     ) {
         composable(route = GameList.route) {
             // Need this to pull data from database to initialize the database.
-            val gameUiState by gameSelectionViewModel.gameUiState.collectAsState()
+            val gameUiState by gameSelectionViewModel.gameUiState.collectAsStateWithLifecycle()
 
-            val searchedGames by gameSelectionViewModel.searchedGames.collectAsState()
-            val searchText by gameSelectionViewModel.searchText.collectAsState()
-            val isSearching by gameSelectionViewModel.isSearching.collectAsState()
+            val searchedGames by gameSelectionViewModel.searchedGames.collectAsStateWithLifecycle()
+            val searchText by gameSelectionViewModel.searchText.collectAsStateWithLifecycle()
+            val isSearching by gameSelectionViewModel.isSearching.collectAsStateWithLifecycle()
             GameSelectionScreen(
                 viewModel = gameSelectionViewModel,
                 searchText = searchText,
