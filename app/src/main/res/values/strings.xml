@@ -59,4 +59,6 @@
     <string name="add_edit_game_no_bitmap_message">There was an issue retrieving the bitmap.</string>
     <string name="add_edit_game_no_image_specified_title">No Image Was Specified</string>
     <string name="add_edit_game_no_image_specified_message">The location of the image was not specified.</string>
+    <string name="details_top_bar_go_back_text">Go back to game selection.</string>
+    <string name="game_detail_game_not_available">Game Not Available</string>
 </resources>

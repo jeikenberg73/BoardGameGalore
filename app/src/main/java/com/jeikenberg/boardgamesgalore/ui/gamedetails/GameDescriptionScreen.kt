@@ -42,7 +42,7 @@ fun GameDescriptionScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            androidx.compose.material.Text(
+            Text(
                 style = MaterialTheme.typography.displayLarge,
                 text = "Game Description"
             )

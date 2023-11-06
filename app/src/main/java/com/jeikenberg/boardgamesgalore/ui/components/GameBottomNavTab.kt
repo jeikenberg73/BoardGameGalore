@@ -63,12 +63,12 @@ fun GameBottomNavBar(
                 icon = {
                     Icon(
                         imageVector = item.icon,
-                        contentDescription = item.label
+                        contentDescription = item.bottomNavLabel
                     )
                 },
                 label = {
                     Text(
-                        text = item.label
+                        text = item.bottomNavLabel
                     )
                 },
                 selected = selectedItem == index,

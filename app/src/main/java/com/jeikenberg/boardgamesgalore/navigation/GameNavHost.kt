@@ -15,6 +15,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -36,7 +37,6 @@ import com.jeikenberg.boardgamesgalore.viewmodels.AddEditGameViewModel
 import com.jeikenberg.boardgamesgalore.viewmodels.GameSelectionViewModel
 import com.mr0xf00.easycrop.rememberImageCropper
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @ExperimentalCoilApi
 @ExperimentalCoroutinesApi
@@ -180,6 +180,9 @@ fun GameNavHost(
                 gameId = navBackStackEntry.arguments?.getLong(GameInfo.gameIdArgs),
                 onTabSelection = { gameDestination, gameId ->
                     navController.navigateToDetails(gameDestination.route, gameId)
+                },
+                onBackPress = {
+                    navController.popBackStack()
                 },
                 modifier = modifier
             )
