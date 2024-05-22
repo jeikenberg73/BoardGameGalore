@@ -6,15 +6,17 @@ import javax.inject.Inject
 class GameRepository @Inject constructor(
     private val gameDao: GameDao
 ){
-    companion object {
-        @Volatile
-        private var instance: GameRepository? = null
 
-        fun getInstance(gameDao: GameDao) =
-            instance ?: synchronized(this) {
-                instance ?: GameRepository(gameDao).also { instance = it }
-            }
-    }
+    // Don't need this now that GameRepository is being injected.
+//    companion object {
+//        @Volatile
+//        private var instance: GameRepository? = null
+//
+//        fun getInstance(gameDao: GameDao) =
+//            instance ?: synchronized(this) {
+//                instance ?: GameRepository(gameDao).also { instance = it }
+//            }
+//    }
 
     fun getGamesStream(): Flow<List<Game>> = gameDao.getGames()
 

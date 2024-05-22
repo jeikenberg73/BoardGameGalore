@@ -42,10 +42,8 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import coil.annotation.ExperimentalCoilApi
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.jeikenberg.boardgamesgalore.R
 import com.jeikenberg.boardgamesgalore.data.game.Game
 import com.jeikenberg.boardgamesgalore.ui.theme.GreenColorStops
@@ -62,15 +60,14 @@ import com.jeikenberg.boardgamesgalore.util.GAME_RATING
 import com.jeikenberg.boardgamesgalore.util.GAME_WEIGHT
 import com.jeikenberg.boardgamesgalore.util.GameTextField
 import com.jeikenberg.boardgamesgalore.viewmodels.AddEditGameViewModel
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 private const val TEMP_IMAGE_NAME = "TEMPIMAGE"
 
-@ExperimentalPermissionsApi
-@ExperimentalCoilApi
 @OptIn(
-    ExperimentalGlideComposeApi::class,
-    ExperimentalComposeUiApi::class
+    ExperimentalComposeUiApi::class, ExperimentalGlideComposeApi::class
 )
 @Composable
 fun AddGameScreen(
@@ -734,7 +731,8 @@ private fun saveGame(
             }
 
         if (isGood) {
-            runBlocking {
+            GlobalScope.launch {
+//            runBlocking {
                 var uriString: String = gameBeingEdited.gameIconUri
                 bitmap?.let { localBitmap ->
                     if (gameIconUri.isNotBlank() && gameIconUri.isNotEmpty()) {

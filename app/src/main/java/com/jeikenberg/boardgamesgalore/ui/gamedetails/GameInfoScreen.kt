@@ -1,9 +1,8 @@
 package com.jeikenberg.boardgamesgalore.ui.gamedetails
 
-import androidx.compose.foundation.Image
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScopeInstance.align
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -12,15 +11,13 @@ import androidx.compose.material.Text
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.currentBackStackEntryAsState
+import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
+import com.bumptech.glide.integration.compose.GlideImage
 import com.jeikenberg.boardgamesgalore.R
 import com.jeikenberg.boardgamesgalore.data.game.Game
 import com.jeikenberg.boardgamesgalore.navigation.GameDestination
@@ -30,10 +27,9 @@ import com.jeikenberg.boardgamesgalore.ui.components.GameBottomNavBar
 import com.jeikenberg.boardgamesgalore.ui.theme.GreenGradiantBackgroundStart
 import com.jeikenberg.boardgamesgalore.ui.theme.GreenGradiantBackgroundStop
 import com.jeikenberg.boardgamesgalore.util.DetailsTopBar
-import com.jeikenberg.boardgamesgalore.util.navigateSingleTopTo
 import com.jeikenberg.boardgamesgalore.viewmodels.AddEditGameViewModel
-import com.jeikenberg.boardgamesgalore.viewmodels.GameSelectionViewModel
 
+@OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 fun GameInfoScreen(
     gameId: Long?,
@@ -77,10 +73,11 @@ fun GameInfoScreen(
                 Card(
                     modifier = modifier
                 ) {
-                    Image(
-                        painter = ,
-                        contentDescription =
-                    )
+                    // Originally was an Image but just trying GlideImage to see if it might help
+                    // improve performance.
+                    GlideImage(
+                        model = Uri.parse(game?.gameIconUri),
+                        contentDescription = null)
                 }
             }
         }
